@@ -24,3 +24,6 @@ HOW IT WORKS
 
 WORDPRESS PORT
   Page template + enqueued style.css/app.js, assets copied into the theme.
+
+CREDIT
+  Template created by Perception System - design studio.

@@ -1,29 +1,35 @@
-IVORY DENTAL CLINIC - one-page website (static, no build step)
+RADIX ENDODONTIC STUDIO — animated root canal website (static, no build step)
 
 RUN LOCALLY
-  npx http-server . -p 8080    then open http://localhost:8080
+  The film scrubs best from a server that supports HTTP Range requests:
+    npx http-server -p 8080      (then open http://localhost:8080)
+  Any real host (Netlify, Vercel, cPanel, WordPress theme) works.
 
-EDIT (top of assets/js/app.js)
-  CONFIG      WhatsApp number, phone, address, maps query, clinic hours (IST)
-              >>> whatsapp/phone are PLACEHOLDERS (98765 43210). Replace before going live. <<<
-  STEPS       captions for the 4 film steps (Comfort, Root canal, Cleaning, Result)
-  TREATMENTS  the 8 treatment cards (name, text, meta, icon)
-  FAQ         questions and answers
-  Film scroll length: data-vh="640" on <section id="film"> in index.html
+STRUCTURE
+  index.html                 all sections and the booking form
+  assets/css/style.css       design tokens at the top (:root)
+  assets/js/app.js           config at the top: TOUR_STOPS, TIME_SLOTS, STAGE_CANAL
+  assets/seq/film/d/         309 WebP frames, 1920w (desktop surgery film)
+  assets/seq/film/m/         309 WebP frames, 900x900 square crop (phones)
+  assets/img/                tour rooms (1920 + 960 "-m"), doctor, before/after, og-image
+  assets/vendor/lenis.min.js smooth scroll (local copy)
 
-FILES
-  assets/seq/film/d   165 WebP frames 1440w + smile.webp (desktop, 5.4 MB)
-  assets/seq/film/m   165 WebP frames portrait 960h + smile.webp (phones, 3.1 MB)
-  assets/img          before.webp / after.webp (comparison slider), og.jpg, favicon.svg
+SECTIONS
+  1 Surgery film: scroll-scrubbed, 5 steps, live meter (discomfort 8→0, chair time 0→75 min)
+  2 Book an appointment: the whole section is clickable and opens the form
+  3 Before/after drag slider · 4 Studio tour (5 rooms, hotspots, autoplay, swipe, keys)
+  5 Doctor + counters · 6 Aftercare timeline · 7 FAQ · Footer
+  Booking form: symptoms, next 6 working days, time slots, validation, reference number, .ics export
 
-HOW IT WORKS
-  The hero card grows to full screen on scroll, then the treatment film plays
-  (frames drawn on <canvas>, smoother than scrubbing video), ending in a crossfade
-  to the result. Booking opens https://wa.me/<number>?text=<prefilled message>.
-  Font: Schibsted Grotesk (Google Fonts). Smooth scroll: Lenis 1.1.13.
+TUNING
+  Film scroll length: .film{height:640vh} in style.css (620vh on phones)
+  Film holds: P_HOLD_A / P_HOLD_B in app.js. Desktop size: DESK_ZOOM, DESK_SHIFT.
+  Slow devices automatically drop the frame cross-fade, then resolution. Data-saver loads half the frames.
 
-WORDPRESS PORT
-  Page template + enqueued style.css/app.js, assets copied into the theme.
+WORDPRESS / WOOCOMMERCE PORT
+  Page template + enqueued CSS/JS, assets in the theme.
+  Booking submit (see "Demo: no server" comment in app.js) -> CF7 / WPForms / WooCommerce Bookings REST.
+  TOUR_STOPS -> ACF repeater; doctor -> CPT.
 
-CREDIT
-  Template created by Perception System - design studio.
+NOTES
+  Clinic name, address, phone and statistics are demo placeholders. All imagery is AI-generated.

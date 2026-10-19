@@ -1,346 +1,472 @@
-/* Ivory Dental Clinic — one-page site with a scroll-driven treatment film.
-   Edit CONFIG, STEPS, TREATMENTS and FAQ below. */
+/* Radix Endodontic Studio · app.js
+   Edit content here: FILM (frame count / dir), STEPS colours, TOUR_STOPS, TIME_SLOTS. */
 (() => {
 'use strict';
 
-/* ---------- CONFIG (replace placeholders before going live) ---------- */
-const CONFIG = {
-  name: 'Ivory Dental Clinic',
-  whatsapp: '919876543210',   // PLACEHOLDER: country code + number, digits only
-  phone: '+91 98765 43210',   // PLACEHOLDER
-  address: ['Ivory Dental Clinic', 'Navrangpura', 'Ahmedabad, Gujarat'],
-  mapsQuery: 'Ivory Dental Clinic Ahmedabad',
-  hours: { 0: [], 1: [[600,840],[1020,1260]], 2: [[600,840],[1020,1260]], 3: [[600,840],[1020,1260]], 4: [[600,840],[1020,1260]], 5: [[600,840],[1020,1260]], 6: [[600,840],[1020,1260]] }
-};
-
-/* ---------- Film captions (step 0 is the hero) ---------- */
-const STEPS = [
-  null,
-  { label: 'Comfort', h: "You're in safe hands", p: 'An ergonomic chair, shadow-free LED light and a numbing gel before every injection. We explain each step before it starts.', tags: ['Numbing gel', 'Single-use kit', 'LED operatory light'] },
-  { label: 'Root canal', h: 'Root canal treatment', p: 'Rotary files gently clean and shape the infected canal while a rubber dam keeps the tooth isolated and dry. Most root canals finish in one or two visits.', tags: ['Rubber dam isolation', 'Rotary endodontics', 'Apex locator'] },
-  { label: 'Cleaning', h: 'Scaling and polishing', p: 'An ultrasonic scaler breaks up tartar with gentle vibration and a cooling water mist, then a polish leaves enamel smooth and bright.', tags: ['Ultrasonic scaler', 'Polishing', 'About 40 minutes'] },
-  { label: 'Result', h: 'Leave with a confident smile', p: 'Clean, comfortable and pain-free. Book your visit on WhatsApp in a few taps.', tags: [], cta: true }
+/* ---------------- config ---------------- */
+const FILM = { dir: 'assets/seq/film', count: 0 /* set from canvas data-count */ };
+const STAGE_CANAL = ['#C22A3E', '#C22A3E', '#4FAFC2', '#E9705C', '#E9705C'];
+const TOUR_STOPS = [
+  { t: '09:00', title: 'Arrive', img: 'reception', text: 'Check in at reception. We go through your medical history and any medicines you take.',
+    hs: [ { x: .62, y: .62, h: 'Check-in', p: 'Under five minutes. Bring any old X-rays if you have them.' },
+          { x: .13, y: .70, h: 'Lounge', p: 'Most people wait under 10 minutes. Water and tea are on the side table.' } ] },
+  { t: '09:10', title: '3D scan', img: 'scan', text: 'A low-dose CBCT scan maps every canal, including the small hidden ones a flat X-ray misses.',
+    hs: [ { x: .52, y: .42, h: 'CBCT scanner', p: 'You stand still for about 15 seconds. The arm circles your head once.' },
+          { x: .86, y: .72, h: 'Your scan', p: 'Ready in two minutes, in full 3D.' } ] },
+  { t: '09:25', title: 'Consultation', img: 'consult', text: 'Dr. Shah shows you the scan, explains the plan and gives a written estimate before anything starts.',
+    hs: [ { x: .48, y: .36, h: 'Your tooth in 3D', p: 'You’ll see the infection and the canals we will treat.' },
+          { x: .33, y: .74, h: 'Ask anything', p: 'Nothing starts until you’re comfortable and have agreed the price.' } ] },
+  { t: '09:40', title: 'Treatment', img: 'suite', text: 'The procedure you just watched, done under an operating microscope. Headphones and a ceiling screen help the time pass.',
+    hs: [ { x: .82, y: .26, h: 'Operating microscope', p: '20× magnification, so canals are cleaned precisely and healthy tooth is kept.' },
+          { x: .76, y: .60, h: 'The chair', p: 'Memory foam, a neck pillow and a blanket if you like.' } ] },
+  { t: '11:00', title: 'Rest', img: 'recovery', text: 'Sit back for 15 minutes with an ice pack while we print your aftercare card and book the crown.',
+    hs: [ { x: .44, y: .70, h: 'Recovery lounge', p: 'Quiet, warm, no rush. Stay as long as you need.' },
+          { x: .84, y: .42, h: 'Garden view', p: 'Most people are back at work or home before lunch.' } ] }
 ];
+const TIME_SLOTS = ['10:00', '11:30', '13:00', '15:30', '17:00', '18:30'];
 
-/* ---------- Treatments ---------- */
-const T = 'M12 4c-1.6-1.2-4.2-1.5-5.6.2C5 6 5.6 9 6.3 11c.6 1.8.7 4 1 6 .3 1.8.8 3 1.6 3 .9 0 1.1-1.4 1.4-3 .3-1.5.6-3 1.7-3s1.4 1.5 1.7 3c.3 1.6.5 3 1.4 3 .8 0 1.3-1.2 1.6-3 .3-2 .4-4.2 1-6 .7-2 1.3-5-.1-6.8C16.2 2.5 13.6 2.8 12 4z';
-const TREATMENTS = [
-  { name: 'Root canal treatment', p: 'Save an infected tooth instead of removing it, with rotary instruments under local anaesthesia.', meta: '1–2 visits', icon: `<path d="${T}"/><path d="M10.6 9v5.5M13.4 9v5.5"/>` },
-  { name: 'Teeth cleaning', p: 'Ultrasonic scaling and polishing to remove tartar and stains. Recommended every six months.', meta: '40 minutes', icon: `<path d="${T}"/><path d="M19.5 2.5v3M18 4h3"/>` },
-  { name: 'Tooth-coloured fillings', p: 'Composite fillings matched to your natural shade for cavities and chipped edges.', meta: '1 visit', icon: `<path d="${T}"/><path d="M10 8.5h4v3h-4z"/>` },
-  { name: 'Crowns and bridges', p: 'Ceramic and zirconia caps to protect weak teeth or replace a missing one.', meta: '2 visits', icon: '<path d="M4 9l4 3 4-6 4 6 4-3-1.6 9H5.6z"/><path d="M6 21h12"/>' },
-  { name: 'Dental implants', p: 'A titanium root and crown that replace a missing tooth for the long term.', meta: '3–4 months', icon: '<path d="M8 3h8l-1 4.5H9z"/><path d="M10 7.5V19l2 2 2-2V7.5M10 11h4M10 14h4M10 17h4"/>' },
-  { name: 'Braces and aligners', p: 'Metal, ceramic or clear removable aligners for crowded or gapped teeth.', meta: '12–24 months', icon: '<rect x="3" y="8" width="18" height="8" rx="3"/><path d="M3 12h18M7.5 10v4M12 10v4M16.5 10v4"/>' },
-  { name: 'Teeth whitening', p: 'In-clinic whitening that lifts tea, coffee and age stains in a single sitting.', meta: '60 minutes', icon: '<path d="M12 3l1.8 4.6L19 9l-4 3.3 1.2 5.2L12 15l-4.2 2.5L9 12.3 5 9l5.2-1.4z"/>' },
-  { name: "Children's dentistry", p: 'Gentle first visits, fluoride, sealants and small fillings at a child-friendly pace.', meta: 'Ages 3+', icon: '<circle cx="12" cy="12" r="9"/><path d="M8.5 14a4 4 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/>' }
-];
-
-const FAQ = [
-  ['Does root canal treatment hurt?', 'With local anaesthesia most patients feel pressure rather than pain, much like a filling. Mild soreness for a day or two is normal and settles with a simple painkiller.'],
-  ['How often should I get my teeth cleaned?', 'Every six months for most people. If you have gum problems or smoke, we may suggest every three to four months.'],
-  ['Will cleaning damage my enamel?', 'No. Ultrasonic scaling removes tartar and stains, not enamel. Teeth can feel slightly sensitive for a day afterwards.'],
-  ['How and when do I pay?', 'At the cash counter after your consultation, by cash, card or UPI. You receive a written estimate before any treatment begins.'],
-  ['Do you see dental emergencies?', 'Yes. Message us on WhatsApp with a short description and we will offer the earliest slot, including Sundays for severe pain or swelling.'],
-  ['Do I need an appointment?', 'Appointments keep waiting times short, but walk-in patients are seen whenever a chair is free.']
-];
-
+/* ---------------- helpers ---------------- */
 const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const lerp = (a, b, t) => a + (b - a) * t;
-const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const mobile = innerWidth <= 760;
-const waLink = text => `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
-
-/* =====================================================================
-   SeqFilm: WebP frames on canvas, keyframes first then coarse-to-fine.
-   ===================================================================== */
-const canvas = $('#canvas');
-const ctx = canvas.getContext('2d', { alpha: false });
-const COUNT = +canvas.dataset.count;
-const KEYS = canvas.dataset.keys.split(',').map(Number);
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isMob = () => matchMedia('(max-width: 820px)').matches;
 const conn = navigator.connection || {};
-const STEP = (conn.saveData || /2g/.test(conn.effectiveType || '')) ? 2 : 1;
-const V = mobile ? 'm' : 'd';
-const base = `assets/seq/film/${V}/`;
-const frames = new Array(COUNT);
-const smile = new Image(); smile.decoding = 'async'; smile.src = base + 'smile.webp';
+const saveData = !!conn.saveData || /2g/.test(conn.effectiveType || '');
 
-const order = [], seen = new Set();
-const add = i => { if (i >= 0 && i < COUNT && !seen.has(i) && (i % STEP === 0 || KEYS.includes(i))) { seen.add(i); order.push(i); } };
-KEYS.forEach(add);
-for (const s of [16, 8, 4, 2, 1]) for (let i = 0; i < COUNT; i += s) add(i);
-const firstPass = order.filter(i => KEYS.includes(i) || i % 16 === 0).length;
-let loaded = 0, cursor = 0, active = 0, onFirstPass = null;
-function pump() {
-  while (active < 6 && cursor < order.length) {
-    const i = order[cursor++]; active++;
-    const img = new Image(); img.decoding = 'async';
-    img.onload = () => { frames[i] = img; loaded++; active--; progress(); pump(); };
-    img.onerror = () => { active--; pump(); };
-    img.src = `${base}f_${String(i + 1).padStart(4, '0')}.webp`;
-  }
-}
-function progress() {
-  const p = Math.min(1, loaded / firstPass);
-  $('#ldBar').style.transform = `scaleX(${p})`;
-  if (p >= 1 && onFirstPass) { onFirstPass(); onFirstPass = null; }
-  dirty = true;
-}
-function nearest(i) {
-  if (frames[i]) return frames[i];
-  for (let d = 1; d < 40; d++) { if (frames[i - d]) return frames[i - d]; if (frames[i + d]) return frames[i + d]; }
-  return null;
-}
-let lastDecode = -99;
-function decodeAround(i) {
-  if (Math.abs(i - lastDecode) < 3) return; lastDecode = i;
-  for (let d = 1; d <= 6; d++) { const f = frames[i + d]; if (f && f.decode) f.decode().catch(() => {}); }
+let toastT;
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2800);
 }
 
-/* ---------- scroll timeline ----------
-   expand (card grows to full screen) -> step holds and moves -> crossfade to smile */
-const SEGS = []; let total = 0;
-const seg = (len, o) => { SEGS.push({ a: total, b: total + len, ...o }); total += len; };
-seg(1.1, { kind: 'expand', f0: 0, f1: 0, step: 0 });
-seg(.7, { kind: 'hold', f0: 0, f1: 0, step: 1 });
-seg(1.2, { kind: 'move', f0: 0, f1: KEYS[1], step: 1 });
-seg(.7, { kind: 'hold', f0: KEYS[1], f1: KEYS[1], step: 2 });
-seg(1.2, { kind: 'move', f0: KEYS[1], f1: KEYS[2], step: 2 });
-seg(.7, { kind: 'hold', f0: KEYS[2], f1: KEYS[2], step: 3 });
-seg(.6, { kind: 'fade', f0: KEYS[2], f1: KEYS[2], step: 3 });
-seg(.9, { kind: 'hold-smile', f0: KEYS[2], f1: KEYS[2], step: 4 });
-const stepStart = [], stepEnd = [];
-SEGS.forEach(s => { if (stepStart[s.step] == null) stepStart[s.step] = s.a; stepEnd[s.step] = s.b; });
-function map(p) {
-  const w = p * total;
-  for (const s of SEGS) if (w <= s.b) {
-    const t = clamp((w - s.a) / (s.b - s.a));
-    let step = s.step;
-    if (s.kind === 'move' && t > .55) step = s.step + 1;
-    if (s.kind === 'fade' && t > .5) step = 4;
-    return {
-      w, step,
-      frame: s.kind === 'move' ? lerp(s.f0, s.f1, ease(t)) : s.f0,
-      expand: s.kind === 'expand' ? ease(t) : 1,
-      smile: s.kind === 'fade' ? ease(t) : s.kind === 'hold-smile' ? 1 : 0
-    };
-  }
-  return { w, step: 4, frame: KEYS[2], expand: 1, smile: 1 };
+/* ---------------- smooth scroll ---------------- */
+let lenis = null;
+if (window.Lenis && !reduce) {
+  lenis = new Lenis({ lerp: 0.11, wheelMultiplier: 1, touchMultiplier: 1.4 });
+  const raf = t => { lenis.raf(t); requestAnimationFrame(raf); };
+  requestAnimationFrame(raf);
 }
-
-/* ---------- layout cache ---------- */
-const film = $('#film'); film.style.height = film.dataset.vh + 'vh';
-const hero = $('#hero');
-let fTop = 0, fLen = 1, W = 0, H = 0, dpr = 1, card = { x: 0, y: 0, w: 0, h: 0 }, bookTop = 0, bookBot = 0;
-function measure() {
-  const y = scrollY;
-  const r = film.getBoundingClientRect(); fTop = r.top + y; fLen = Math.max(1, r.height - innerHeight);
-  const b = $('#book').getBoundingClientRect(); bookTop = b.top + y; bookBot = bookTop + b.height;
-  dpr = Math.min(devicePixelRatio || 1, 1.5);
-  W = innerWidth; H = canvas.clientHeight;
-  canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
-  const gut = Math.max(16, Math.min(48, W * .04));
-  const wrapL = Math.max(gut, (W - 1240) / 2), wrapR = W - wrapL;
-  if (mobile) {
-    const hb = hero.offsetTop + hero.offsetHeight;
-    card = { x: gut, y: Math.min(hb + 22, H * .62), w: W - 2 * gut, h: 0 }; card.h = H - card.y - gut;
-  } else {
-    const x = wrapL + (wrapR - wrapL) * .47;
-    card = { x, y: 92, w: wrapR - x, h: H - 92 - 40 };
-  }
-  dirty = true;
-}
-
-/* ---------- drawing ---------- */
-const BG = '#fbfbf9';
-let dirty = true, lastKey = '';
-function cover(img, x, y, w, h, alpha = 1) {
-  const iw = img.naturalWidth, ih = img.naturalHeight, s = Math.max(w / iw, h / ih), dw = iw * s, dh = ih * s;
-  ctx.globalAlpha = alpha;
-  ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) * .08, dw, dh);
-  ctx.globalAlpha = 1;
-}
-function render(fi, m) {
-  const key = `${fi}|${m.expand.toFixed(4)}|${m.smile.toFixed(3)}`;
-  if (!dirty && key === lastKey) return;
-  const img = nearest(fi); if (!img) return;
-  lastKey = key; dirty = false;
-  const e = m.expand;
-  const x = lerp(card.x, 0, e), y = lerp(card.y, 0, e), w = lerp(card.w, W, e), h = lerp(card.h, H, e), r = lerp(26, 0, e);
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  if (e < 1) { ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H); }
-  ctx.save();
-  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); ctx.clip();
-  cover(img, x, y, w, h);
-  if (m.smile > 0 && smile.complete && smile.naturalWidth) cover(smile, x, y, w, h, m.smile);
-  if (e > 0) { // bottom shade for step labels
-    const g = ctx.createLinearGradient(0, H * .62, 0, H);
-    g.addColorStop(0, 'rgba(13,26,23,0)'); g.addColorStop(1, `rgba(13,26,23,${.55 * e})`);
-    ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
-  }
-  ctx.restore();
-}
-
-/* ---------- captions + step nav ---------- */
-const cap = $('#cap'), capK = $('#capK'), capH = $('#capH'), capP = $('#capP'), capT = $('#capT'), capCta = $('#capCta');
-const stepsNav = $('#steps');
-STEPS.forEach((s, i) => { if (!s) return;
-  const b = document.createElement('button'); b.type = 'button'; b.dataset.i = i;
-  b.innerHTML = `<span>${String(i).padStart(2, '0')}  ${s.label}</span><i><b></b></i>`;
-  b.addEventListener('click', () => { const mid = SEGS.find(g => g.step === i && g.kind.startsWith('hold')); go(fTop + ((mid.a + mid.b) / 2 / total) * fLen); });
-  stepsNav.appendChild(b);
-});
-const stepBtns = [...stepsNav.children];
-let cur = -1;
-function setStep(i) {
-  if (i === cur) return; cur = i;
-  stepBtns.forEach(b => { const on = +b.dataset.i === i; b.classList.toggle('now', on); b.setAttribute('aria-current', on ? 'step' : 'false'); });
-  if (!i) { cap.classList.remove('on'); return; }
-  const s = STEPS[i];
-  capK.textContent = `Step ${i} of ${STEPS.length - 1}`; capH.textContent = s.h; capP.textContent = s.p;
-  capT.innerHTML = s.tags.map(t => `<li>${t}</li>`).join(''); capT.hidden = !s.tags.length; capCta.hidden = !s.cta;
-  cap.classList.add('on'); cap.classList.remove('swap'); void cap.offsetWidth; cap.classList.add('swap');
-}
-
-/* ---------- chrome ---------- */
-const hdr = $('#hdr'), fab = $('#fab'), hint = $('#hint');
-let lastY = 0;
-function chrome(y, m) {
-  if (Math.abs(y - lastY) > 6) { hdr.classList.toggle('hide', y > lastY && y > 200 && m.expand >= 1); lastY = y; }
-  hdr.classList.toggle('line', y > fTop + fLen + innerHeight - 90);
-  fab.classList.toggle('on', y > fTop + fLen + innerHeight * .3 && !(y + innerHeight * .6 > bookTop && y < bookBot - innerHeight * .3));
-}
-
-/* ---------- loop ---------- */
-let fcur = 0, lenis = null;
-function loop(t) {
-  if (lenis) lenis.raf(t);
-  const y = scrollY, p = clamp((y - fTop) / fLen), m = map(p);
-  fcur = Math.abs(m.frame - fcur) < .3 ? m.frame : lerp(fcur, m.frame, .22);
-  const fi = Math.round(fcur);
-  if (y < fTop + fLen + innerHeight) { render(fi, m); decodeAround(fi); }
-  const ho = clamp(m.expand * 1.7);
-  hero.style.opacity = (1 - ho).toFixed(3);
-  hero.style.translate = `${(-ho * 40).toFixed(1)}px 0`;
-  hero.style.visibility = ho >= 1 ? 'hidden' : 'visible';
-  hint.style.opacity = (1 - clamp(m.expand * 4)).toFixed(2);
-  stepsNav.classList.toggle('on', m.expand >= .98);
-  stepBtns.forEach(b => { const i = +b.dataset.i; b.querySelector('b').style.transform = `scaleX(${clamp((m.w - stepStart[i]) / (stepEnd[i] - stepStart[i])).toFixed(3)})`; });
-  setStep(m.step);
-  chrome(y, m);
-  requestAnimationFrame(loop);
-}
-function go(y) { lenis ? lenis.scrollTo(y, { duration: 1.4 }) : scrollTo({ top: y, behavior: reduced ? 'auto' : 'smooth' }); }
-
-/* ---------- treatments ---------- */
-$('#grid').innerHTML = TREATMENTS.map(t => `
-  <article class="tc">
-    <div class="tc__ic"><svg viewBox="0 0 24 24" aria-hidden="true">${t.icon}</svg></div>
-    <h3>${t.name}</h3><p>${t.p}</p>
-    <div class="tc__meta"><span>${t.meta}</span><a href="${waLink(`Hello ${CONFIG.name}, I'd like to know more about ${t.name.toLowerCase()}.`)}" target="_blank" rel="noopener" aria-label="Ask about ${t.name} on WhatsApp">Enquire<svg aria-hidden="true"><use href="#arrow"/></svg></a></div>
-  </article>`).join('');
-
-/* ---------- before / after ---------- */
-const ba = $('#ba'), baR = $('#baRange');
-baR.addEventListener('input', () => ba.style.setProperty('--x', baR.value + '%'));
-
-/* ---------- FAQ ---------- */
-const faqList = $('#faqList');
-faqList.innerHTML = FAQ.map(([q, a], i) => `<div class="qa"><button type="button" aria-expanded="false" aria-controls="qa${i}">${q}<span class="qa__ic" aria-hidden="true"></span></button><div class="qa__a" id="qa${i}" role="region"><div><p>${a}</p></div></div></div>`).join('');
-faqList.querySelectorAll('.qa').forEach(qa => qa.querySelector('button').addEventListener('click', e => {
-  const open = !qa.classList.contains('open'); qa.classList.toggle('open', open); e.currentTarget.setAttribute('aria-expanded', String(open)); setTimeout(measure, 450);
+$$('a[href^="#"]').forEach(a => a.addEventListener('click', e => {
+  const id = a.getAttribute('href'); const el = id === '#top' ? document.body : $(id);
+  if (!el) return; e.preventDefault();
+  lenis ? lenis.scrollTo(el, { offset: id === '#top' ? 0 : -70, duration: 1.4 }) : el.scrollIntoView({ behavior: 'smooth' });
 }));
 
-/* ---------- booking form (inline section + "Book a consultation" dialog) ---------- */
-const iso = d => new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
-const now = new Date(), tm = new Date(now); tm.setDate(tm.getDate() + 1);
-function bindForm(form, onSent) {
-  const q = n => form.elements[n], fD = q('date');
-  ['General check-up', ...TREATMENTS.map(t => t.name), 'Wisdom tooth problem', 'Not sure yet, need advice'].forEach(n => q('treatment').add(new Option(n, n)));
-  fD.min = iso(now); fD.value = iso(tm);
-  const message = () => {
-    const f = new FormData(form);
-    const d = new Date(f.get('date') + 'T00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
-    const lines = [`Hello ${CONFIG.name}, I would like to book a consultation.`, '', `Name: ${f.get('name').trim()}`, `Mobile: ${f.get('phone').trim()}`, `Treatment: ${f.get('treatment')}`, `Preferred: ${d}, ${f.get('slot')}`];
-    const note = f.get('note').trim(); if (note) lines.push(`Message: ${note}`);
-    return lines.join('\n');
-  };
-  form.addEventListener('input', e => e.target.closest('.f')?.classList.remove('bad'));
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    const digits = q('phone').value.replace(/\D/g, '').replace(/^(91|0)(?=\d{10}$)/, '');
-    const ok = { name: !!q('name').value.trim(), phone: /^[6-9]\d{9}$/.test(digits), date: !!fD.value && fD.value >= fD.min };
-    Object.entries(ok).forEach(([n, v]) => q(n).closest('.f').classList.toggle('bad', !v));
-    if (!Object.values(ok).every(Boolean)) { form.querySelector('.bad input')?.focus(); return; }
-    window.open(waLink(message()), '_blank', 'noopener');
-    toast('Opening WhatsApp. Tap send to confirm your request.');
-    onSent?.(q('name').value.trim().split(/\s+/)[0]);
-  });
+/* ---------------- the surgery film (image sequence on canvas) ---------------- */
+class Film {
+  constructor(sec) {
+    this.sec = sec; this.cv = $('canvas', sec); this.ctx = this.cv.getContext('2d');
+    this.n = +this.cv.dataset.count || FILM.count; this.mob = isMob();
+    this.step = saveData ? 2 : 1;
+    this.imgs = new Array(this.n); this.ok = new Uint8Array(this.n);
+    this.cur = 0; this.tgt = 0; this.lastKey = ''; this.bg = ['#e4eaed', '#d2dbe0'];
+    this.blend = !saveData; this.slow = 0; this.frames = 0;
+    this.resize(); addEventListener('resize', () => { this.resize(); this.lastKey = ''; });
+  }
+  src(i) { return `${FILM.dir}/${this.mob ? 'm' : 'd'}/f_${String(i + 1).padStart(4, '0')}.webp`; }
+  load(i) {
+    if (this.imgs[i]) return this.imgs[i].p;
+    const im = new Image(); im.decoding = 'async';
+    const p = new Promise(res => {
+      im.onload = () => { (im.decode ? im.decode() : Promise.resolve()).catch(() => {}).then(() => { this.ok[i] = 1; if (i === 0) this.sampleBg(im); this.lastKey = ''; res(); }); };
+      im.onerror = () => res();
+    });
+    im.src = this.src(i); this.imgs[i] = { im, p }; return p;
+  }
+  /* coarse-to-fine: every 16th frame first, then 8th, 4th, 2nd, all */
+  async preload(onFirst) {
+    const order = [], seen = new Set();
+    for (const s of [16, 8, 4, 2, 1]) {
+      if (s < this.step) break;
+      for (let i = 0; i < this.n; i += s) if (!seen.has(i)) { seen.add(i); order.push(i); }
+      if (!seen.has(this.n - 1)) { seen.add(this.n - 1); order.push(this.n - 1); }
+      if (s === 16) order.push('first');
+    }
+    let k = 0; const firstCount = order.indexOf('first'); let done = 0;
+    const work = async () => {
+      while (k < order.length) {
+        const i = order[k++]; if (i === 'first') continue;
+        await this.load(i); done++;
+        if (onFirst && done <= firstCount) onFirst(done / firstCount);
+      }
+    };
+    await Promise.all(Array.from({ length: 6 }, work));
+  }
+  sampleBg(im) {
+    try {
+      const c = document.createElement('canvas'); c.width = 4; c.height = 16;
+      const x = c.getContext('2d'); x.drawImage(im, 0, 0, 4, 16);
+      const d = x.getImageData(0, 0, 4, 16).data;
+      const row = r => { let a = [0, 0, 0]; for (let j = 0; j < 4; j++) { const o = (r * 4 + j) * 4; a[0] += d[o]; a[1] += d[o + 1]; a[2] += d[o + 2]; } return `rgb(${a.map(v => Math.round(v / 4)).join(',')})`; };
+      this.bg = [row(0), row(15)];
+      this.sec.style.background = this.bg[0];
+    } catch (e) {}
+  }
+  resize() {
+    const dpr = Math.min(devicePixelRatio || 1, this.lowres ? 1.25 : 2);
+    const w = this.cv.clientWidth, h = this.cv.clientHeight;
+    const maxW = this.mob ? 1100 : 2400;
+    const s = Math.min(dpr, maxW / w);
+    this.cv.width = Math.round(w * s); this.cv.height = Math.round(h * s);
+    this.W = this.cv.width; this.H = this.cv.height;
+  }
+  nearest(i) {
+    i = clamp(Math.round(i), 0, this.n - 1);
+    if (this.ok[i]) return i;
+    for (let d = 1; d < this.n; d++) { if (this.ok[i - d]) return i - d; if (this.ok[i + d]) return i + d; }
+    return -1;
+  }
+  rect(im) {
+    const { W, H } = this; const iw = im.naturalWidth, ih = im.naturalHeight;
+    if (this.mob) { // square frame fitted to width, centred at 40% of the height
+      const s = W / iw, dw = W, dh = ih * s; return [0, H * 0.40 - dh / 2, dw, dh];
+    }
+    const z = W / H < 1.25 ? 1 : DESK_ZOOM; // smaller tooth on wide screens, leave room for copy
+    const s = Math.max(W / iw, H / ih) * z; const dw = iw * s, dh = ih * s;
+    return [(W - dw) / 2 + (z < 1 ? W * DESK_SHIFT : 0), (H - dh) / 2 + H * 0.015, dw, dh];
+  }
+  buildMask(r) { // alpha mask that feathers any frame edge that sits inside the canvas
+    const m = document.createElement('canvas'); m.width = this.W; m.height = this.H;
+    const c = m.getContext('2d'); c.fillStyle = '#000'; c.fillRect(r[0], r[1], r[2], r[3]);
+    c.globalCompositeOperation = 'destination-out';
+    const fy = r[3] * (this.mob ? 0.14 : 0.1), fx = r[2] * 0.09;
+    const strip = (x0, y0, x1, y1, rx, ry, rw, rh) => { const g = c.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(rx, ry, rw, rh); };
+    if (r[1] > 0.5) strip(0, r[1], 0, r[1] + fy, r[0], r[1], r[2], fy);
+    if (r[1] + r[3] < this.H - 0.5) strip(0, r[1] + r[3], 0, r[1] + r[3] - fy, r[0], r[1] + r[3] - fy, r[2], fy);
+    if (!this.mob && r[0] > 0.5) strip(r[0], 0, r[0] + fx, 0, r[0], r[1], fx, r[3]);
+    if (!this.mob && r[0] + r[2] < this.W - 0.5) strip(r[0] + r[2], 0, r[0] + r[2] - fx, 0, r[0] + r[2] - fx, r[1], fx, r[3]);
+    this.mask = m; this.maskKey = `${this.W}x${this.H}|${r.map(Math.round).join(',')}`;
+  }
+  draw(f) {
+    const a = Math.floor(f), t = f - a;
+    const ia = this.nearest(a), ib = this.nearest(a + 1);
+    if (ia < 0) return;
+    const key = this.blend && ib !== ia ? `${ia}|${ib}|${t.toFixed(2)}` : `${ia}`;
+    if (key === this.lastKey) return; this.lastKey = key;
+    const c = this.ctx, { W, H } = this;
+    const A = this.imgs[ia].im, r = this.rect(A);
+    const mk = `${W}x${H}|${r.map(Math.round).join(',')}`;
+    if (this.maskKey !== mk) this.buildMask(r);
+    c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1; c.clearRect(0, 0, W, H);
+    c.drawImage(A, r[0], r[1], r[2], r[3]);
+    if (this.blend && ib !== ia && ib >= 0 && t > 0.03) { c.globalAlpha = t; c.drawImage(this.imgs[ib].im, r[0], r[1], r[2], r[3]); c.globalAlpha = 1; }
+    c.globalCompositeOperation = 'destination-in'; c.drawImage(this.mask, 0, 0);
+    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, this.bg[0]); g.addColorStop(1, this.bg[1]);
+    c.globalCompositeOperation = 'destination-over'; c.fillStyle = g; c.fillRect(0, 0, W, H);
+    c.globalCompositeOperation = 'source-over';
+  }
 }
-bindForm($('#form'));
 
-const dlg = $('#bookDlg'), dlgForm = $('#form').cloneNode(true);
-dlgForm.id = 'formM';
-dlgForm.querySelectorAll('[id]').forEach(el => el.id += 'M');
-dlgForm.querySelectorAll('label[for]').forEach(l => l.htmlFor += 'M');
-dlgForm.querySelectorAll('select').forEach(sel => sel.innerHTML = '');
-dlgForm.querySelectorAll('input[type=radio]').forEach(r => r.checked = r.defaultChecked);
-dlgForm.querySelector('.form__hint').textContent = 'Opens WhatsApp. Nothing is sent until you tap send.';
-$('#dlgBody').prepend(dlgForm);
-bindForm(dlgForm, first => { $('#dlgThanks b').textContent = first; dlg.classList.add('sent'); $('#dlgDone').focus(); });
-function openBook() {
-  dlg.classList.remove('sent');
-  if (typeof dlg.showModal === 'function') { dlg.showModal(); lenis?.stop(); } else go($('#book').getBoundingClientRect().top + scrollY - 70);
+const filmSec = $('#film');
+const film = new Film(filmSec);
+const ui = {
+  intro: $('#filmIntro'), steps: $$('.step'), meter: $('#meter'), pain: $('#mPain'), time: $('#mTime'),
+  bar: $('#mBar'), done: $('#filmDone'), tooth: $('.meter-tooth')
+};
+let lastStep = -1, lastPain = -1, lastTime = -1;
+
+/* scroll progress p (0..1 through the pinned film) → frame f (0..1) with holds at both ends */
+const DESK_ZOOM = 0.84, DESK_SHIFT = 0.06;
+const P_HOLD_A = 0.11, P_HOLD_B = 0.92;
+function filmProgress() {
+  const r = filmSec.getBoundingClientRect();
+  return clamp(-r.top / (filmSec.offsetHeight - innerHeight));
 }
-function closeBook() { dlg.close(); }
-dlg.addEventListener('close', () => lenis?.start());
-dlg.addEventListener('click', e => { if (e.target === dlg || e.target.closest('[data-close]')) closeBook(); });
-let tt; function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 3400); }
+function updateFilmUI(p, f) {
+  ui.intro.classList.toggle('gone', p > 0.035);
+  let step = -1;
+  if (p > 0.035) step = f <= 0.001 ? 0 : Math.min(4, 1 + Math.floor(f * 4 - 1e-6));
+  if (p > P_HOLD_B + 0.015) step = 5;
+  if (step !== lastStep) {
+    ui.steps.forEach((el, i) => { el.classList.toggle('on', i === step); el.classList.toggle('past', i < step); });
+    ui.done.classList.toggle('on', step === 5);
+    ui.meter.classList.toggle('dim', step === -1);
+    lastStep = step;
+  }
+  const pain = f < 0.03 ? 8 : Math.round(8 * (1 - smooth(0.02, 0.32, f)));
+  const time = Math.round(75 * f);
+  if (pain !== lastPain) { ui.pain.textContent = pain; lastPain = pain; }
+  if (time !== lastTime) { ui.time.textContent = time; lastTime = time; }
+  ui.bar.style.transform = `scaleX(${f.toFixed(3)})`;
+  ui.tooth.style.setProperty('--canal', STAGE_CANAL[Math.min(4, Math.floor(f * 4 + 0.5))]);
+  ui.tooth.style.setProperty('--cap', smooth(0.8, 0.96, f).toFixed(2));
+}
 
-/* ---------- contact ---------- */
-$('#addr').innerHTML = CONFIG.address.join('<br>');
-$('#mapLink').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(CONFIG.mapsQuery)}`;
-const tel = 'tel:' + CONFIG.phone.replace(/\s/g, '');
-$('#hdrPhone').textContent = CONFIG.phone; $('#hdrCall').href = tel;
-$('#ctPhone').textContent = CONFIG.phone; $('#ctPhone').href = tel;
-$('#yr').textContent = new Date().getFullYear();
-(function status() {
-  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date());
-  const g = t => parts.find(p => p.type === t).value;
-  const day = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(g('weekday')), mins = +g('hour') * 60 + +g('minute');
-  const fmt = m => { const h = Math.floor(m / 60), mm = m % 60; return `${((h + 11) % 12) + 1}${mm ? ':' + String(mm).padStart(2, '0') : ''} ${h >= 12 ? 'pm' : 'am'}`; };
-  const el = $('#status'), today = CONFIG.hours[day] || [];
-  const open = today.find(([a, b]) => mins >= a && mins < b);
-  if (open) { el.textContent = `Open now · closes at ${fmt(open[1])}`; el.classList.add('open'); return; }
-  const later = today.find(([a]) => a > mins);
-  if (later) { el.textContent = `Closed now · opens at ${fmt(later[0])}`; return; }
-  for (let k = 1; k <= 7; k++) { const d = (day + k) % 7, h = CONFIG.hours[d]; if (h && h.length) { el.textContent = `Closed now · opens ${k === 1 ? 'tomorrow' : ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d]} at ${fmt(h[0][0])}`; return; } }
-})();
+/* perf guard: drop the cross-fade, then resolution, if frames are slow */
+let lastTs = 0, slowN = 0, totN = 0;
+function guard(ts) {
+  if (lastTs) { const dt = ts - lastTs; totN++; if (dt > 24) slowN++;
+    if (totN > 90) { const r = slowN / totN;
+      if (r > 0.15 && film.blend) film.blend = false;
+      else if (r > 0.2 && !film.lowres) { film.lowres = true; film.resize(); }
+      totN = slowN = 0; } }
+  lastTs = ts;
+}
 
-/* ---------- anchors via Lenis ---------- */
+let filmActive = true;
+new IntersectionObserver(es => es.forEach(e => filmActive = e.isIntersecting), { rootMargin: '100px' }).observe(filmSec);
+
+function tick(ts) {
+  if (filmActive && film.n) {
+    const p = filmProgress();
+    const f = clamp((p - P_HOLD_A) / (P_HOLD_B - P_HOLD_A));
+    film.tgt = f * (film.n - 1);
+    const d = film.tgt - film.cur;
+    film.cur = Math.abs(d) < 0.01 ? film.tgt : film.cur + d * (reduce ? 1 : 0.2);
+    film.draw(film.cur);
+    updateFilmUI(p, film.cur / (film.n - 1));
+    if (Math.abs(d) > 0.05) guard(ts); else lastTs = 0;
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ---------------- loader ---------------- */
+const loaderEl = $('#loader'), loaderNum = $('#loaderNum');
+let shown = 0;
+function setLoad(v) { shown = Math.max(shown, v); loaderEl.style.setProperty('--lp', shown); loaderNum.textContent = Math.round(shown * 100); }
+const minWait = new Promise(r => setTimeout(r, 1100));
+const cap = new Promise(r => setTimeout(r, 8000));
+const firstPass = new Promise(res => {
+  if (!film.n) return res();
+  film.load(0).then(() => film.preload(v => { setLoad(v); if (v >= 1) res(); }));
+});
+Promise.race([Promise.all([firstPass, document.fonts ? document.fonts.ready : 0, minWait]), cap]).then(() => {
+  setLoad(1);
+  setTimeout(() => { loaderEl.classList.add('out'); setTimeout(() => loaderEl.remove(), 1100); }, 250);
+});
+requestAnimationFrame(tick);
+
+/* ---------------- header + mobile book bar ---------------- */
+const hdr = $('#hdr'), mbook = $('.mbook'), bookSec = $('#book');
+let lastY = 0;
+function onScroll() {
+  const y = scrollY, fr = filmSec.getBoundingClientRect(), br = bookSec.getBoundingClientRect();
+  const overFilm = fr.bottom > 70;
+  hdr.classList.toggle('over-film', overFilm);
+  hdr.classList.toggle('solid', !overFilm && y > 10);
+  hdr.classList.toggle('hide', !overFilm && y > lastY + 4 && y > innerHeight);
+  if (y < lastY - 4) hdr.classList.remove('hide');
+  lastY = y;
+  const inBook = br.top < innerHeight && br.bottom > 0;
+  mbook.classList.toggle('on', y > innerHeight * 0.6 && !inBook && !modalOpen);
+  // book section parallax
+  const bp = clamp(1 - (br.top + br.height * 0.5) / (innerHeight + br.height * 0.5), 0, 1) - 0.5;
+  bookSec.style.setProperty('--bp', bp.toFixed(3));
+  // doctor parallax
+  const df = $('.doc-fig'); if (df) { const r = df.getBoundingClientRect(); df.style.setProperty('--py', `${((r.top + r.height / 2 - innerHeight / 2) * -0.06).toFixed(1)}px`); }
+  // after timeline fill
+  const tl = $('#tl'), tlr = tl.getBoundingClientRect();
+  const tf = clamp((innerHeight * 0.75 - tlr.top) / (tlr.height + innerHeight * 0.2));
+  const line = $('.tl-line'); line.style.setProperty('--tf', tf.toFixed(3));
+  $$('li', tl).forEach((li, i, a) => li.classList.toggle('on', tf >= i / (a.length - 1) - 0.02));
+  // footer wordmark fill
+  const fw = $('.ftr-word'), fwr = fw.getBoundingClientRect();
+  fw.style.setProperty('--fw', `${(clamp((innerHeight - fwr.top) / (fwr.height + innerHeight * 0.4)) * 100).toFixed(1)}%`);
+}
+function placeTlLine() {
+  const tl = $('#tl'), sec = $('#after'), first = $('li', tl);
+  const top = first.getBoundingClientRect().top - sec.getBoundingClientRect().top;
+  const line = $('.tl-line');
+  if (isMob()) { line.style.setProperty('--tly', `${top + 13}px`); line.style.setProperty('--tlh', `${tl.offsetHeight - 30}px`); }
+  else line.style.setProperty('--tly', `${top + 7}px`);
+}
+addEventListener('scroll', onScroll, { passive: true });
+addEventListener('resize', () => { placeTlLine(); onScroll(); });
+addEventListener('load', () => { placeTlLine(); onScroll(); });
+
+/* ---------------- book section: cursor + open ---------------- */
+const bkCur = $('.bk-cursor');
+bookSec.addEventListener('pointermove', e => {
+  if (e.pointerType !== 'mouse') return;
+  const r = bookSec.getBoundingClientRect();
+  bkCur.style.setProperty('--cx', `${e.clientX - r.left}px`); bkCur.style.setProperty('--cy', `${e.clientY - r.top}px`); bkCur.style.setProperty('--cs', 1);
+});
+bookSec.addEventListener('pointerleave', () => bkCur.style.setProperty('--cs', 0));
+bookSec.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openBook(); } });
+
+/* ---------------- booking modal + form ---------------- */
+const modal = $('#modal'), card = $('#modalCard'), form = $('#bf'), done = $('#bfDone');
+let modalOpen = false, lastFocus = null, booking = null;
+
+function buildDays() {
+  const wrap = $('#dayChips'); wrap.innerHTML = '';
+  const d = new Date(); d.setHours(0, 0, 0, 0);
+  const wd = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], mo = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  let added = 0, k = 0;
+  if (new Date().getHours() >= 18) k = 1; // too late for today
+  while (added < 6) {
+    const x = new Date(d); x.setDate(d.getDate() + k++);
+    if (x.getDay() === 0) continue;
+    const lab = added === 0 && k === 1 ? 'Today' : added === 0 || (k === 2 && added === 1 && new Date().getHours() < 18) ? (k === 2 ? 'Tomorrow' : wd[x.getDay()]) : wd[x.getDay()];
+    const iso = `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+    wrap.insertAdjacentHTML('beforeend', `<label><input type="radio" name="day" value="${iso}" data-label="${wd[x.getDay()]} ${x.getDate()} ${mo[x.getMonth()]}"><span><small>${lab}</small><strong>${x.getDate()}</strong><small>${mo[x.getMonth()]}</small></span></label>`);
+    added++;
+  }
+  wrap.onchange = buildTimes;
+}
+function buildTimes() {
+  const wrap = $('#timeChips'); const sel = (form.querySelector('[name=time]:checked') || {}).value;
+  const day = (form.querySelector('[name=day]:checked') || {}).value;
+  const now = new Date(); const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  wrap.innerHTML = TIME_SLOTS.map(t => {
+    const [h, m] = t.split(':').map(Number); const past = day === todayIso && (h * 60 + m) < (now.getHours() * 60 + now.getMinutes() + 60);
+    return `<label><input type="radio" name="time" value="${t}" ${past ? 'disabled' : ''} ${sel === t && !past ? 'checked' : ''}><span style="${past ? 'opacity:.35;text-decoration:line-through' : ''}">${t}</span></label>`;
+  }).join('');
+}
+function openBook(e) {
+  if (modalOpen) return;
+  lastFocus = document.activeElement;
+  const x = e && e.clientX ? e.clientX : innerWidth / 2, y = e && e.clientY ? e.clientY : innerHeight / 2;
+  modal.hidden = false;
+  const r = card.getBoundingClientRect();
+  card.style.setProperty('--mx', `${clamp(x - r.left, 0, r.width)}px`); card.style.setProperty('--my', `${clamp(y - r.top, 0, r.height)}px`);
+  if (!form.querySelector('[name=day]')) { buildDays(); buildTimes(); }
+  requestAnimationFrame(() => requestAnimationFrame(() => modal.classList.add('open')));
+  modalOpen = true; document.body.classList.add('locked'); lenis && lenis.stop();
+  mbook.classList.remove('on');
+  setTimeout(() => (form.hidden ? $('#bfIcs') : $('#symChips input')).focus({ preventScroll: true }), 350);
+}
+function closeBook() {
+  if (!modalOpen) return;
+  modal.classList.remove('open'); modalOpen = false;
+  document.body.classList.remove('locked'); lenis && lenis.start();
+  setTimeout(() => { if (!modalOpen) modal.hidden = true; }, 650);
+  if (booking) setTimeout(() => { form.reset(); form.hidden = false; done.hidden = true; buildDays(); buildTimes(); booking = null; }, 700);
+  lastFocus && lastFocus.focus && lastFocus.focus({ preventScroll: true });
+}
 document.addEventListener('click', e => {
-  const a = e.target.closest('a[href^="#"]'); if (!a) return;
-  const id = a.getAttribute('href');
-  if (id === '#book' && !a.closest('#book')) { e.preventDefault(); openBook(); return; }
-  if (id === '#top') { e.preventDefault(); go(0); return; }
-  const el = $(id); if (!el) return; e.preventDefault();
-  go(el.getBoundingClientRect().top + scrollY - (id === '#book' || id === '#contact' ? 70 : 0));
+  const b = e.target.closest('[data-book]'); if (b) { e.preventDefault(); openBook(e); return; }
+  if (e.target.closest('[data-close]')) closeBook();
+});
+document.addEventListener('keydown', e => {
+  if (!modalOpen) return;
+  if (e.key === 'Escape') closeBook();
+  if (e.key === 'Tab') { // keep focus inside the dialog
+    const f = $$('button, input:not([disabled]), textarea, a[href]', card).filter(el => el.offsetParent !== null);
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
 });
 
-/* ---------- boot ---------- */
-new ResizeObserver(measure).observe(document.body);
-addEventListener('resize', measure);
-let started = false;
-function start() {
-  if (started) return; started = true;
-  $('#loader').classList.add('out'); document.body.classList.remove('is-loading'); document.body.classList.add('ready');
-  setTimeout(() => $('#loader')?.remove(), 700);
-  if (window.Lenis && !reduced) lenis = new Lenis({ lerp: .1 });
-  measure(); requestAnimationFrame(loop);
+function setErr(key, on) {
+  const el = form.querySelector(`[data-err="${key}"]`); if (!el) return;
+  el.classList.toggle('show', on); const f = el.closest('.fld'); if (f) f.classList.toggle('bad', on);
 }
-onFirstPass = () => Promise.race([document.fonts ? document.fonts.ready : 0, new Promise(r => setTimeout(r, 1500))]).then(() => setTimeout(start, 200));
-setTimeout(start, 8000);
-if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-scrollTo(0, 0); measure(); pump();
+form.addEventListener('input', e => { if (e.target.name) setErr(e.target.name, false); if (e.target.name === 'day' || e.target.name === 'time') setErr(e.target.name, false); });
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  const fd = new FormData(form);
+  const v = { day: fd.get('day'), time: fd.get('time'), name: (fd.get('name') || '').trim(), phone: (fd.get('phone') || '').replace(/\D/g, ''), email: (fd.get('email') || '').trim(), notes: (fd.get('notes') || '').trim(), sym: fd.getAll('sym') };
+  if (v.phone.length === 12 && v.phone.startsWith('91')) v.phone = v.phone.slice(2);
+  const bad = {
+    day: !v.day, time: !v.time, name: v.name.length < 2,
+    phone: !/^[6-9]\d{9}$/.test(v.phone), email: !!v.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email)
+  };
+  Object.entries(bad).forEach(([k, b]) => setErr(k, b));
+  const firstBad = Object.keys(bad).find(k => bad[k]);
+  if (firstBad) {
+    const el = form.querySelector(`[name="${firstBad}"]`); el && el.focus({ preventScroll: true });
+    (form.querySelector(`[data-err="${firstBad}"]`) || el).scrollIntoView({ block: 'center', behavior: 'smooth' });
+    return;
+  }
+  const dayLabel = form.querySelector(`[name=day][value="${v.day}"]`).dataset.label;
+  booking = { ...v, dayLabel, ref: 'RX-' + Math.random().toString(36).slice(2, 6).toUpperCase() };
+  // Demo: no server. For WordPress, POST `booking` to CF7 / WPForms / a REST endpoint here.
+  $('#bfSummary').textContent = `${v.name.split(' ')[0]}, we’ve held ${dayLabel} at ${v.time} for you. We’ll call ${v.phone.replace(/(\d{5})(\d{5})/, '$1 $2')} to confirm within 2 working hours.`;
+  $('#bfRef').textContent = booking.ref;
+  form.hidden = true; done.hidden = false; card.scrollTop = 0;
+  setTimeout(() => $('#bfIcs').focus({ preventScroll: true }), 200);
+});
+$('#bfIcs').addEventListener('click', () => {
+  if (!booking) return;
+  const [y, m, d] = booking.day.split('-'); const [hh, mm] = booking.time.split(':');
+  const pad = n => String(n).padStart(2, '0');
+  const st = `${y}${m}${d}T${hh}${mm}00`; const endMin = (+hh * 60 + +mm + 90); const en = `${y}${m}${d}T${pad(Math.floor(endMin / 60))}${pad(endMin % 60)}00`;
+  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Radix//Booking//EN', 'BEGIN:VEVENT', `UID:${booking.ref}@radix.studio`, `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`, `DTSTART;TZID=Asia/Kolkata:${st}`, `DTEND;TZID=Asia/Kolkata:${en}`, 'SUMMARY:Root canal appointment · Radix Endodontic Studio', 'LOCATION:4th floor, Sindhu Bhavan Road, Bodakdev, Ahmedabad', `DESCRIPTION:Reference ${booking.ref}. Call +91 79 4000 2626 to reschedule.`, 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' })); a.download = `radix-${booking.ref}.ics`;
+  document.body.appendChild(a); a.click(); a.remove(); toast('Calendar file downloaded');
+});
+// after a completed booking, closing resets to a fresh form
+
+/* ---------------- before / after ---------------- */
+const cmp = $('#cmp'), cmpR = $('.cmp-range', cmp);
+cmpR.addEventListener('input', () => cmp.style.setProperty('--x', cmpR.value + '%'));
+
+/* ---------------- studio tour ---------------- */
+const tv = $('#tv'), tvStage = $('#tvStage'), tvCap = $('#tvCap'), tvLine = $('#tvLine');
+const DUR = 7000; let ti = -1, tAuto = !reduce, tStart = 0, tPausedAt = 0, hoverPause = false;
+const tourSrc = n => ({ src: `assets/img/${n}.webp`, srcset: `assets/img/${n}-m.webp 960w, assets/img/${n}.webp 1920w` });
+tvLine.innerHTML = TOUR_STOPS.map((s, i) => `<li><button data-i="${i}"><i></i><b>${s.t}</b><span>${s.title}</span></button></li>`).join('');
+const tlBtns = $$('button', tvLine);
+
+function placeHotspots(slide) {
+  const img = $('img', slide); const W = slide.clientWidth, H = slide.clientHeight;
+  const iw = 16, ih = 9.05; const s = Math.max(W / iw, H / ih); const dw = iw * s, dh = ih * s; const ox = (W - dw) / 2, oy = (H - dh) / 2;
+  $$('.hs, .hs-tip', slide).forEach(el => {
+    const x = ox + (+el.dataset.x) * dw, y = oy + (+el.dataset.y) * dh;
+    el.style.setProperty('--hx', `${clamp(x, 24, W - 24)}px`); el.style.setProperty('--hy', `${clamp(y, 24, H - 24)}px`);
+    if (el.classList.contains('hs-tip')) el.classList.toggle('below', y < H * 0.35);
+  });
+}
+function goTour(i, ev) {
+  i = (i + TOUR_STOPS.length) % TOUR_STOPS.length; if (i === ti) return;
+  const s = TOUR_STOPS[i], src = tourSrc(s.img);
+  const sl = document.createElement('div'); sl.className = 'tv-slide' + (ti < 0 ? ' base in' : '');
+  if (ev && ev.clientX) { const r = tv.getBoundingClientRect(); sl.style.setProperty('--ox', `${ev.clientX - r.left}px`); sl.style.setProperty('--oy', `${ev.clientY - r.top}px`); }
+  sl.innerHTML = `<img src="${src.src}" srcset="${src.srcset}" sizes="(max-width: 820px) 100vw, 1400px" alt="${s.title}: ${s.text}" decoding="async">` +
+    s.hs.map((h, k) => `<button class="hs" data-x="${h.x}" data-y="${h.y}" data-k="${k}" aria-label="${h.h}"></button><div class="hs-tip" data-x="${h.x}" data-y="${h.y}" data-k="${k}" role="tooltip"><b>${h.h}</b>${h.p}</div>`).join('');
+  tvStage.appendChild(sl); placeHotspots(sl);
+  const img = $('img', sl);
+  const reveal = () => requestAnimationFrame(() => requestAnimationFrame(() => { sl.classList.add('in', 'kb'); }));
+  img.complete ? reveal() : (img.onload = reveal, img.onerror = reveal);
+  setTimeout(() => { $$('.tv-slide', tvStage).forEach(o => { if (o !== sl) o.remove(); }); }, 1250);
+  tvCap.innerHTML = `<span class="t">${s.t} · stop ${i + 1} of ${TOUR_STOPS.length}</span><h3>${s.title}</h3><p>${s.text}</p>`;
+  $$('li', tvLine).forEach((li, k) => { li.classList.toggle('on', k === i); tlBtns[k].style.setProperty('--tp', k < i ? 1 : 0); });
+  ti = i; tStart = performance.now(); tPausedAt = 0;
+  // preload next
+  const nx = TOUR_STOPS[(i + 1) % TOUR_STOPS.length]; const pre = new Image(); pre.srcset = tourSrc(nx.img).srcset; pre.sizes = isMob() ? '100vw' : '1400px';
+}
+tv.addEventListener('click', e => {
+  const hs = e.target.closest('.hs');
+  if (hs) { e.stopPropagation(); const sl = hs.closest('.tv-slide'); const tip = $(`.hs-tip[data-k="${hs.dataset.k}"]`, sl);
+    const was = tip.classList.contains('on'); $$('.hs-tip', sl).forEach(t => t.classList.remove('on')); if (!was) tip.classList.add('on'); pauseTour(true); }
+});
+tv.addEventListener('pointerover', e => { const hs = e.target.closest('.hs'); if (hs && e.pointerType === 'mouse') { const sl = hs.closest('.tv-slide'); $(`.hs-tip[data-k="${hs.dataset.k}"]`, sl).classList.add('on'); } });
+tv.addEventListener('pointerout', e => { const hs = e.target.closest('.hs'); if (hs && e.pointerType === 'mouse') { const sl = hs.closest('.tv-slide'); $(`.hs-tip[data-k="${hs.dataset.k}"]`, sl).classList.remove('on'); } });
+tv.addEventListener('mouseenter', () => { hoverPause = true; });
+tv.addEventListener('mouseleave', () => { hoverPause = false; });
+function pauseTour(on) { tAuto = !on; tv.classList.toggle('paused', on); $('#tvPlay').setAttribute('aria-label', on ? 'Play tour' : 'Pause tour'); if (!on) tStart = performance.now() - (tPausedAt || 0); }
+$('#tvPlay').addEventListener('click', e => { e.stopPropagation(); pauseTour(tAuto); });
+$('#tvPrev').addEventListener('click', e => { e.stopPropagation(); goTour(ti - 1); });
+$('#tvNext').addEventListener('click', e => { e.stopPropagation(); goTour(ti + 1); });
+tlBtns.forEach(b => b.addEventListener('click', e => goTour(+b.dataset.i)));
+tv.addEventListener('keydown', e => { if (e.key === 'ArrowRight') goTour(ti + 1); if (e.key === 'ArrowLeft') goTour(ti - 1); if (e.key === ' ') { e.preventDefault(); pauseTour(tAuto); } });
+let sx = null; tv.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
+tv.addEventListener('touchend', e => { if (sx == null) return; const dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 50) goTour(ti + (dx < 0 ? 1 : -1)); sx = null; });
+addEventListener('resize', () => $$('.tv-slide', tvStage).forEach(placeHotspots));
+let tvVisible = false;
+new IntersectionObserver(es => es.forEach(en => { tvVisible = en.isIntersecting; if (tvVisible && ti < 0) goTour(0); }), { rootMargin: '200px' }).observe(tv);
+(function tvLoop(now) {
+  if (ti >= 0) {
+    const running = tAuto && !hoverPause && tvVisible && !document.hidden && !modalOpen;
+    if (running) { const el = now - tStart; tlBtns[ti].style.setProperty('--tp', clamp(el / DUR).toFixed(3)); if (el >= DUR) goTour(ti + 1); }
+    else { tPausedAt = now - tStart; tStart = now - tPausedAt; }
+  }
+  requestAnimationFrame(tvLoop);
+})(performance.now());
+
+/* ---------------- counters ---------------- */
+const fmt = n => n.toLocaleString('en-IN');
+const cio = new IntersectionObserver((es) => es.forEach(e => {
+  if (!e.isIntersecting) return; cio.unobserve(e.target);
+  const el = e.target, to = +el.dataset.count, suf = el.dataset.suffix || ''; const t0 = performance.now(), D = reduce ? 1 : 1600;
+  (function run(t) { const k = clamp((t - t0) / D); const v = Math.round(to * (1 - Math.pow(1 - k, 3))); el.textContent = fmt(v) + suf; if (k < 1) requestAnimationFrame(run); })(t0);
+}), { threshold: 0.6 });
+$$('[data-count]').forEach(el => { if (el.tagName !== 'CANVAS') cio.observe(el); });
+
+onScroll();
 })();

@@ -58,10 +58,10 @@ body.locked{overflow:hidden}
 .film{position:relative;height:640vh;background:var(--stage)}
 .film-pin{position:sticky;top:0;height:100vh;height:100svh;overflow:clip}
 #filmCanvas{position:absolute;inset:0;width:100%;height:100%}
-.film-intro{position:absolute;left:var(--pad);bottom:clamp(40px,10vh,110px);max-width:min(560px,40vw);transition:opacity .5s,transform .7s var(--ease)}
+.film-intro{position:absolute;left:var(--pad);bottom:clamp(32px,8vh,110px);top:calc(88px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;justify-content:flex-end;max-width:min(560px,40vw);transition:opacity .5s,transform .7s var(--ease)}
 .film-intro.gone{opacity:0;transform:translateY(-24px);pointer-events:none}
 .intro-k{margin:0 0 18px;font-weight:600;font-size:15px;color:var(--ink2)}
-.film-intro h1{font-size:clamp(46px,7.2vw,118px);line-height:.95}
+.film-intro h1{font-size:clamp(40px,min(7.2vw,10.5vh),118px);line-height:.95}
 .intro-l{margin:22px 0 0;max-width:40ch;color:var(--ink2);font-size:18px}
 .scroll-cue{display:flex;align-items:center;gap:12px;margin-top:30px;font-size:14px;font-weight:600;color:var(--ink2)}
 .scroll-cue span{width:22px;height:34px;border-radius:12px;box-shadow:inset 0 0 0 1.5px var(--ink2);position:relative}

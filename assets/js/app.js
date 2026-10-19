@@ -291,30 +291,53 @@ bookSec.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' 
 const modal = $('#modal'), card = $('#modalCard'), form = $('#bf'), done = $('#bfDone');
 let modalOpen = false, lastFocus = null, booking = null;
 
+/* Doctor availability. Demo schedule: derived from the date so it is stable.
+   Replace slotTaken()/dayOff() with a real calendar/API lookup. */
+const hash = str => { let h = 2166136261; for (const c of str) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) % 100; };
+const isoOf = x => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+const dayOff = iso => hash('off' + iso) < 14;
+const slotPast = (iso, t) => { const n = new Date(); if (iso !== isoOf(n)) return false; const [h, m] = t.split(':').map(Number); return h * 60 + m < n.getHours() * 60 + n.getMinutes() + 60; };
+const slotTaken = (iso, t) => dayOff(iso) || slotPast(iso, t) || hash(iso + t) < 38;
+const freeCount = iso => TIME_SLOTS.filter(t => !slotTaken(iso, t)).length;
+const fmtDay = iso => { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }); };
+
 function buildDays() {
   const wrap = $('#dayChips'); wrap.innerHTML = '';
   const d = new Date(); d.setHours(0, 0, 0, 0);
   const wd = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], mo = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   let added = 0, k = 0;
-  if (new Date().getHours() >= 18) k = 1; // too late for today
-  while (added < 6) {
+  while (added < 8) {
     const x = new Date(d); x.setDate(d.getDate() + k++);
     if (x.getDay() === 0) continue;
-    const lab = added === 0 && k === 1 ? 'Today' : added === 0 || (k === 2 && added === 1 && new Date().getHours() < 18) ? (k === 2 ? 'Tomorrow' : wd[x.getDay()]) : wd[x.getDay()];
-    const iso = `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
-    wrap.insertAdjacentHTML('beforeend', `<label><input type="radio" name="day" value="${iso}" data-label="${wd[x.getDay()]} ${x.getDate()} ${mo[x.getMonth()]}"><span><small>${lab}</small><strong>${x.getDate()}</strong><small>${mo[x.getMonth()]}</small></span></label>`);
+    const iso = isoOf(x), n = freeCount(iso), off = dayOff(iso);
+    const lab = k === 1 ? 'Today' : k === 2 ? 'Tomorrow' : wd[x.getDay()];
+    const note = off ? 'On leave' : n ? `${n} free` : 'Full';
+    wrap.insertAdjacentHTML('beforeend', `<label class="${n ? 'av-yes' : 'av-no'}"><input type="radio" name="day" value="${iso}" data-label="${wd[x.getDay()]} ${x.getDate()} ${mo[x.getMonth()]}" ${n ? '' : 'disabled'}><span><small>${lab}</small><strong>${x.getDate()}</strong><small>${mo[x.getMonth()]}</small><em>${note}</em></span></label>`);
     added++;
   }
-  wrap.onchange = buildTimes;
+  wrap.onchange = () => { buildTimes(); docStatus(); };
 }
 function buildTimes() {
   const wrap = $('#timeChips'); const sel = (form.querySelector('[name=time]:checked') || {}).value;
   const day = (form.querySelector('[name=day]:checked') || {}).value;
-  const now = new Date(); const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   wrap.innerHTML = TIME_SLOTS.map(t => {
-    const [h, m] = t.split(':').map(Number); const past = day === todayIso && (h * 60 + m) < (now.getHours() * 60 + now.getMinutes() + 60);
-    return `<label><input type="radio" name="time" value="${t}" ${past ? 'disabled' : ''} ${sel === t && !past ? 'checked' : ''}><span style="${past ? 'opacity:.35;text-decoration:line-through' : ''}">${t}</span></label>`;
+    const taken = day ? slotTaken(day, t) : false;
+    return `<label class="${day ? (taken ? 'av-no' : 'av-yes') : ''}"><input type="radio" name="time" value="${t}" ${taken || !day ? 'disabled' : ''} ${sel === t && !taken ? 'checked' : ''}><span>${t}${day ? `<em>${taken ? 'Booked' : 'Available'}</em>` : ''}</span></label>`;
   }).join('');
+  wrap.onchange = docStatus;
+}
+function docStatus() {
+  const box = $('#docStatus'), day = (form.querySelector('[name=day]:checked') || {}).value, time = (form.querySelector('[name=time]:checked') || {}).value;
+  let st = 'idle', msg = 'Pick a day and time to check availability.';
+  if (day && time) { st = 'yes'; msg = `Dr. Shah is available on ${fmtDay(day)} at ${time}.`; }
+  else if (day) { const n = freeCount(day); st = n ? 'yes' : 'no'; msg = n ? `Dr. Shah has ${n} free slot${n > 1 ? 's' : ''} on ${fmtDay(day)}. Choose a time.` : `Dr. Shah is not available on ${fmtDay(day)}.`; }
+  box.dataset.state = st; $('#docMsg').textContent = msg;
+}
+function nextFree() {
+  const radios = [...form.querySelectorAll('[name=day]:not(:disabled)')]; if (!radios.length) { const box = $('#docStatus'); box.dataset.state = 'no'; $('#docMsg').textContent = 'Dr. Shah has no free slots in the next 8 days. Please call us.'; return; }
+  const r = radios[0]; r.checked = true; buildTimes();
+  const t = TIME_SLOTS.find(t => !slotTaken(r.value, t)); const tr = form.querySelector(`[name=time][value="${t}"]`); if (tr) tr.checked = true;
+  setErr('day', false); setErr('time', false); docStatus();
 }
 function openBook(e) {
   if (modalOpen) return;
@@ -323,7 +346,7 @@ function openBook(e) {
   modal.hidden = false;
   const r = card.getBoundingClientRect();
   card.style.setProperty('--mx', `${clamp(x - r.left, 0, r.width)}px`); card.style.setProperty('--my', `${clamp(y - r.top, 0, r.height)}px`);
-  if (!form.querySelector('[name=day]')) { buildDays(); buildTimes(); }
+  if (!form.querySelector('[name=day]')) { buildDays(); buildTimes(); docStatus(); }
   requestAnimationFrame(() => requestAnimationFrame(() => modal.classList.add('open')));
   modalOpen = true; document.body.classList.add('locked'); lenis && lenis.stop();
   mbook.classList.remove('on');
@@ -334,7 +357,7 @@ function closeBook() {
   modal.classList.remove('open'); modalOpen = false;
   document.body.classList.remove('locked'); lenis && lenis.start();
   setTimeout(() => { if (!modalOpen) modal.hidden = true; }, 650);
-  if (booking) setTimeout(() => { form.reset(); form.hidden = false; done.hidden = true; buildDays(); buildTimes(); booking = null; }, 700);
+  if (booking) setTimeout(() => { form.reset(); form.hidden = false; done.hidden = true; buildDays(); buildTimes(); docStatus(); booking = null; }, 700);
   lastFocus && lastFocus.focus && lastFocus.focus({ preventScroll: true });
 }
 document.addEventListener('click', e => {
@@ -360,10 +383,10 @@ form.addEventListener('input', e => { if (e.target.name) setErr(e.target.name, f
 form.addEventListener('submit', e => {
   e.preventDefault();
   const fd = new FormData(form);
-  const v = { day: fd.get('day'), time: fd.get('time'), name: (fd.get('name') || '').trim(), phone: (fd.get('phone') || '').replace(/\D/g, ''), email: (fd.get('email') || '').trim(), notes: (fd.get('notes') || '').trim(), sym: fd.getAll('sym') };
+  const v = { day: fd.get('day'), time: fd.get('time'), name: (fd.get('name') || '').trim(), phone: (fd.get('phone') || '').replace(/\D/g, ''), email: (fd.get('email') || '').trim(), notes: (fd.get('notes') || '').trim(), sym: fd.getAll('sym'), visit: fd.get('visit'), who: fd.get('who'), contact: fd.get('contact') };
   if (v.phone.length === 12 && v.phone.startsWith('91')) v.phone = v.phone.slice(2);
   const bad = {
-    day: !v.day, time: !v.time, name: v.name.length < 2,
+    day: !v.day, time: !v.time || (v.day && slotTaken(v.day, v.time)), name: v.name.length < 2,
     phone: !/^[6-9]\d{9}$/.test(v.phone), email: !!v.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email)
   };
   Object.entries(bad).forEach(([k, b]) => setErr(k, b));
@@ -376,11 +399,12 @@ form.addEventListener('submit', e => {
   const dayLabel = form.querySelector(`[name=day][value="${v.day}"]`).dataset.label;
   booking = { ...v, dayLabel, ref: 'RX-' + Math.random().toString(36).slice(2, 6).toUpperCase() };
   // Demo: no server. For WordPress, POST `booking` to CF7 / WPForms / a REST endpoint here.
-  $('#bfSummary').textContent = `${v.name.split(' ')[0]}, we’ve held ${dayLabel} at ${v.time} for you. We’ll call ${v.phone.replace(/(\d{5})(\d{5})/, '$1 $2')} to confirm within 2 working hours.`;
+  $('#bfSummary').textContent = `${v.name.split(' ')[0]}, we’ve held ${dayLabel} at ${v.time} for you. Dr. Shah is available for your ${v.visit.toLowerCase()} visit. We’ll ${v.contact === 'WhatsApp' ? 'WhatsApp' : 'call'} ${v.phone.replace(/(\d{5})(\d{5})/, '$1 $2')} to confirm within 2 working hours.`;
   $('#bfRef').textContent = booking.ref;
   form.hidden = true; done.hidden = false; card.scrollTop = 0;
   setTimeout(() => $('#bfIcs').focus({ preventScroll: true }), 200);
 });
+$('#nextFree').addEventListener('click', nextFree);
 $('#bfIcs').addEventListener('click', () => {
   if (!booking) return;
   const [y, m, d] = booking.day.split('-'); const [hh, mm] = booking.time.split(':');

@@ -235,6 +235,21 @@
       <h2 id="mTitle">Book an appointment</h2>
       <p class="bf-sub">Pick a time and tell us what’s going on. We’ll confirm by phone within 2 working hours.</p>
 
+      <div class="bf-doc" id="docStatus" data-state="idle" aria-live="polite">
+        <span class="bf-dot" aria-hidden="true"></span>
+        <div><strong id="docTitle">Dr. Shah · Endodontist</strong><small id="docMsg">Pick a day and time to check availability.</small></div>
+        <button type="button" class="bf-next" id="nextFree">Next free slot</button>
+      </div>
+
+      <fieldset>
+        <legend>Type of visit</legend>
+        <div class="chips" id="visitChips">
+          <label><input type="radio" name="visit" value="New patient" checked><span>New patient</span></label>
+          <label><input type="radio" name="visit" value="Follow-up"><span>Follow-up</span></label>
+          <label><input type="radio" name="visit" value="Emergency (pain now)"><span>Emergency (pain now)</span></label>
+        </div>
+      </fieldset>
+
       <fieldset class="bf-sym">
         <legend>What are you feeling?</legend>
         <div class="chips" id="symChips">
@@ -255,12 +270,21 @@
       <fieldset>
         <legend>Time</legend>
         <div class="chips" id="timeChips"></div>
-        <p class="bf-err" data-err="time">Choose a time.</p>
+        <p class="bf-err" data-err="time">Choose an available time.</p>
+        <p class="bf-legend"><i class="ok"></i>Doctor available <i class="no"></i>Not available / booked</p>
       </fieldset>
 
       <div class="bf-row">
         <label class="fld"><span>Full name</span><input name="name" autocomplete="name" required><em class="bf-err" data-err="name">Enter your name.</em></label>
         <label class="fld"><span>Mobile number</span><input name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="98765 43210" required><em class="bf-err" data-err="phone">Enter a 10-digit mobile number.</em></label>
+      </div>
+      <div class="bf-row">
+        <fieldset class="bf-mini"><legend>Booking for</legend>
+          <div class="chips"><label><input type="radio" name="who" value="Myself" checked><span>Myself</span></label><label><input type="radio" name="who" value="Someone else"><span>Someone else</span></label></div>
+        </fieldset>
+        <fieldset class="bf-mini"><legend>Confirm me by</legend>
+          <div class="chips"><label><input type="radio" name="contact" value="Phone call" checked><span>Phone call</span></label><label><input type="radio" name="contact" value="WhatsApp"><span>WhatsApp</span></label></div>
+        </fieldset>
       </div>
       <label class="fld"><span>Email <i>(optional, for the confirmation)</i></span><input name="email" type="email" autocomplete="email"><em class="bf-err" data-err="email">Check the email address.</em></label>
       <label class="fld"><span>Anything we should know? <i>(optional)</i></span><textarea name="notes" rows="2" placeholder="Which tooth, how long it’s hurt, medicines you take"></textarea></label>

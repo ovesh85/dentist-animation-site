@@ -261,3 +261,28 @@ address{font-style:normal;font-size:.95rem;line-height:1.55}
   .ba__view{aspect-ratio:1/1}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* book a consultation dialog */
+.dlg{border:0;padding:0;background:transparent;width:min(640px,calc(100vw - 24px));max-height:calc(100dvh - 24px);color:var(--ink);overflow:visible}
+.dlg::backdrop{background:rgba(13,26,23,.55);backdrop-filter:blur(4px)}
+.dlg[open]{animation:dlgIn .35s var(--ease)}
+.dlg[open]::backdrop{animation:dlgFade .3s}
+@keyframes dlgIn{from{opacity:0;transform:translateY(24px) scale(.97)}}
+@keyframes dlgFade{from{opacity:0}}
+.dlg__in{position:relative;background:var(--card);border-radius:28px;padding:clamp(22px,4vw,40px);max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}
+.dlg__x{position:absolute;top:14px;right:14px;width:40px;height:40px;border:0;border-radius:50%;background:var(--tint);color:var(--ink);display:grid;place-items:center;cursor:pointer;transition:background .2s}
+.dlg__x:hover{background:var(--teal-l)}
+.dlg__x svg{width:18px;height:18px}
+.dlg__lede{margin:.6rem 0 0;color:var(--muted)}
+.dlg .form{margin-top:1.5rem}
+.dlg__ok{display:none;text-align:center;padding:1.5rem 0}
+.dlg__ok h3{margin:1rem 0 .4rem;font-size:1.5rem}
+.dlg__ok p{color:var(--muted);margin:0 auto 1.5rem;max-width:36ch}
+.dlg__tick{display:inline-grid;place-items:center;width:64px;height:64px;border-radius:50%;background:var(--teal-l);color:var(--teal)}
+.dlg__tick svg{width:30px;height:30px;stroke-dasharray:30;stroke-dashoffset:30}
+.dlg.sent #dlgBody{display:none}
+.dlg.sent .dlg__ok{display:block}
+.dlg.sent .dlg__tick svg{animation:tick .5s .15s var(--ease) forwards}
+@keyframes tick{to{stroke-dashoffset:0}}
+@media (max-width:560px){.dlg .form{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.dlg[open],.dlg[open]::backdrop{animation:none}.dlg.sent .dlg__tick svg{animation:none;stroke-dashoffset:0}}

@@ -214,6 +214,22 @@
 </footer>
 
 <a class="fab" id="fab" href="#book" aria-label="Book on WhatsApp"><svg aria-hidden="true"><use href="#wa"/></svg></a>
+<dialog class="dlg" id="bookDlg" aria-labelledby="dlgH">
+  <div class="dlg__in">
+    <button class="dlg__x" type="button" data-close aria-label="Close"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div id="dlgBody">
+      <p class="eyebrow">Consultation</p>
+      <h2 class="h2" id="dlgH">Book a consultation</h2>
+      <p class="dlg__lede">Tell us what you need. WhatsApp opens with your request ready to send.</p>
+    </div>
+    <div class="dlg__ok" id="dlgThanks" role="status">
+      <span class="dlg__tick"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+      <h3>Thank you, <b></b></h3>
+      <p>Your request is ready in WhatsApp. Tap send there and our team will confirm your slot shortly.</p>
+      <button class="btn btn--primary" type="button" id="dlgDone" data-close>Done</button>
+    </div>
+  </div>
+</dialog>
 <div class="toast" id="toast" role="status"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>

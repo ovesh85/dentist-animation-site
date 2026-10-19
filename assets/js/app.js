@@ -252,28 +252,50 @@ faqList.querySelectorAll('.qa').forEach(qa => qa.querySelector('button').addEven
   const open = !qa.classList.contains('open'); qa.classList.toggle('open', open); e.currentTarget.setAttribute('aria-expanded', String(open)); setTimeout(measure, 450);
 }));
 
-/* ---------- booking form ---------- */
-const form = $('#form'), fT = $('#fTreat'), fD = $('#fDate');
-['General check-up', ...TREATMENTS.map(t => t.name), 'Wisdom tooth problem', 'Not sure yet, need advice'].forEach(n => fT.add(new Option(n, n)));
+/* ---------- booking form (inline section + "Book a consultation" dialog) ---------- */
 const iso = d => new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
-const now = new Date(); fD.min = iso(now); const tm = new Date(now); tm.setDate(tm.getDate() + 1); fD.value = iso(tm);
-function message() {
-  const f = new FormData(form);
-  const d = new Date(f.get('date') + 'T00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
-  const lines = [`Hello ${CONFIG.name}, I would like to book an appointment.`, '', `Name: ${f.get('name').trim()}`, `Mobile: ${f.get('phone').trim()}`, `Treatment: ${f.get('treatment')}`, `Preferred: ${d}, ${f.get('slot')}`];
-  const note = f.get('note').trim(); if (note) lines.push(`Message: ${note}`);
-  return lines.join('\n');
+const now = new Date(), tm = new Date(now); tm.setDate(tm.getDate() + 1);
+function bindForm(form, onSent) {
+  const q = n => form.elements[n], fD = q('date');
+  ['General check-up', ...TREATMENTS.map(t => t.name), 'Wisdom tooth problem', 'Not sure yet, need advice'].forEach(n => q('treatment').add(new Option(n, n)));
+  fD.min = iso(now); fD.value = iso(tm);
+  const message = () => {
+    const f = new FormData(form);
+    const d = new Date(f.get('date') + 'T00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
+    const lines = [`Hello ${CONFIG.name}, I would like to book a consultation.`, '', `Name: ${f.get('name').trim()}`, `Mobile: ${f.get('phone').trim()}`, `Treatment: ${f.get('treatment')}`, `Preferred: ${d}, ${f.get('slot')}`];
+    const note = f.get('note').trim(); if (note) lines.push(`Message: ${note}`);
+    return lines.join('\n');
+  };
+  form.addEventListener('input', e => e.target.closest('.f')?.classList.remove('bad'));
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const digits = q('phone').value.replace(/\D/g, '').replace(/^(91|0)(?=\d{10}$)/, '');
+    const ok = { name: !!q('name').value.trim(), phone: /^[6-9]\d{9}$/.test(digits), date: !!fD.value && fD.value >= fD.min };
+    Object.entries(ok).forEach(([n, v]) => q(n).closest('.f').classList.toggle('bad', !v));
+    if (!Object.values(ok).every(Boolean)) { form.querySelector('.bad input')?.focus(); return; }
+    window.open(waLink(message()), '_blank', 'noopener');
+    toast('Opening WhatsApp. Tap send to confirm your request.');
+    onSent?.(q('name').value.trim().split(/\s+/)[0]);
+  });
 }
-form.addEventListener('input', e => e.target.closest('.f')?.classList.remove('bad'));
-form.addEventListener('submit', e => {
-  e.preventDefault();
-  const name = $('#fName').value.trim(), digits = $('#fPhone').value.replace(/\D/g, '').replace(/^(91|0)(?=\d{10}$)/, '');
-  const ok = { fName: !!name, fPhone: /^[6-9]\d{9}$/.test(digits), fDate: !!fD.value && fD.value >= fD.min };
-  Object.entries(ok).forEach(([id, v]) => $('#' + id).closest('.f').classList.toggle('bad', !v));
-  if (!Object.values(ok).every(Boolean)) { form.querySelector('.bad input')?.focus(); return; }
-  window.open(waLink(message()), '_blank', 'noopener');
-  toast('Opening WhatsApp. Tap send to confirm your request.');
-});
+bindForm($('#form'));
+
+const dlg = $('#bookDlg'), dlgForm = $('#form').cloneNode(true);
+dlgForm.id = 'formM';
+dlgForm.querySelectorAll('[id]').forEach(el => el.id += 'M');
+dlgForm.querySelectorAll('label[for]').forEach(l => l.htmlFor += 'M');
+dlgForm.querySelectorAll('select').forEach(sel => sel.innerHTML = '');
+dlgForm.querySelectorAll('input[type=radio]').forEach(r => r.checked = r.defaultChecked);
+dlgForm.querySelector('.form__hint').textContent = 'Opens WhatsApp. Nothing is sent until you tap send.';
+$('#dlgBody').prepend(dlgForm);
+bindForm(dlgForm, first => { $('#dlgThanks b').textContent = first; dlg.classList.add('sent'); $('#dlgDone').focus(); });
+function openBook() {
+  dlg.classList.remove('sent');
+  if (typeof dlg.showModal === 'function') { dlg.showModal(); lenis?.stop(); } else go($('#book').getBoundingClientRect().top + scrollY - 70);
+}
+function closeBook() { dlg.close(); }
+dlg.addEventListener('close', () => lenis?.start());
+dlg.addEventListener('click', e => { if (e.target === dlg || e.target.closest('[data-close]')) closeBook(); });
 let tt; function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 3400); }
 
 /* ---------- contact ---------- */
@@ -300,6 +322,7 @@ $('#yr').textContent = new Date().getFullYear();
 document.addEventListener('click', e => {
   const a = e.target.closest('a[href^="#"]'); if (!a) return;
   const id = a.getAttribute('href');
+  if (id === '#book' && !a.closest('#book')) { e.preventDefault(); openBook(); return; }
   if (id === '#top') { e.preventDefault(); go(0); return; }
   const el = $(id); if (!el) return; e.preventDefault();
   go(el.getBoundingClientRect().top + scrollY - (id === '#book' || id === '#contact' ? 70 : 0));

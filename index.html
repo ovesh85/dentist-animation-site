@@ -37,6 +37,7 @@
   <nav class="nav" aria-label="Main">
     <a href="#film">The treatment</a>
     <a href="#tour">Studio tour</a>
+    <a href="#services">Services</a>
     <a href="#doctor">Your endodontist</a>
     <a href="#faq">Questions</a>
   </nav>
@@ -48,7 +49,7 @@
 <!-- 1. The surgery film: one continuous shot, scrubbed by scroll -->
 <section class="film" id="film" aria-label="Root canal treatment, step by step">
   <div class="film-pin">
-    <canvas id="filmCanvas" data-count="309" aria-hidden="true"></canvas>
+    <canvas id="filmCanvas" data-count="432" aria-hidden="true"></canvas>
 
     <div class="film-intro" id="filmIntro">
       <p class="intro-k">Root canal treatment, start to finish</p>
@@ -159,6 +160,23 @@
   <ol class="tv-line" id="tvLine"></ol>
 </section>
 
+<!-- Services -->
+<section class="services sec" id="services">
+  <div class="sec-head">
+    <h2>Every kind of dental care</h2>
+    <p>Root canals are our specialty, but the whole family can be looked after here. Pick a service and we’ll preselect it in the form.</p>
+  </div>
+  <div class="svc-grid">
+    <button type="button" class="svc" data-book data-service="Root canal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3c0-2 4-2 7 0 3-2 7-2 7 0 0 5-2 8-2 12s-1 6-2 6-1-4-3-5c-2 1-2 5-3 5s-2-2-2-6S5 8 5 3Z"/></svg><h3>Root canal</h3><p>Save a painful or infected tooth under a microscope.</p><span>Book this</span></button>
+    <button type="button" class="svc" data-book data-service="Check-up & cleaning"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg><h3>Check-up & cleaning</h3><p>Scan, scale and polish. Catch problems early.</p><span>Book this</span></button>
+    <button type="button" class="svc" data-book data-service="Teeth whitening"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18"/></svg><h3>Teeth whitening</h3><p>Up to 8 shades brighter in one 60-minute visit.</p><span>Book this</span></button>
+    <button type="button" class="svc" data-book data-service="Dental implants"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l-1 6h-4zM10 9v12M14 9v12M8 13h8M8 17h8"/></svg><h3>Dental implants</h3><p>A permanent replacement that looks and feels natural.</p><span>Book this</span></button>
+    <button type="button" class="svc" data-book data-service="Braces & aligners"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h18v6H3zM8 9v6M12 9v6M16 9v6"/></svg><h3>Braces & aligners</h3><p>Straighter teeth with clear aligners or classic braces.</p><span>Book this</span></button>
+    <button type="button" class="svc" data-book data-service="Crowns & veneers"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9l4 3 4-7 4 7 4-3-2 10H6z"/></svg><h3>Crowns & veneers</h3><p>Repair chips and cracks, or reshape your smile.</p><span>Book this</span></button>
+    <button type="button" class="svc" data-book data-service="Kids’ dentistry"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8-5-8-11a4 4 0 0 1 8-1 4 4 0 0 1 8 1c0 6-8 11-8 11z"/></svg><h3>Kids’ dentistry</h3><p>Gentle first visits, sealants and fluoride care.</p><span>Book this</span></button>
+  </div>
+</section>
+
 <!-- 5. Doctor -->
 <section class="doctor sec" id="doctor">
   <figure class="doc-fig">
@@ -228,7 +246,7 @@
 <!-- Booking form -->
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle" hidden>
   <div class="modal-scrim" data-close></div>
-  <div class="modal-card" id="modalCard">
+  <div class="modal-card" id="modalCard" data-lenis-prevent>
     <button class="modal-x" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
 
     <form class="bf" id="bf" novalidate>
@@ -240,6 +258,19 @@
         <div><strong id="docTitle">Dr. Shah · Endodontist</strong><small id="docMsg">Pick a day and time to check availability.</small></div>
         <button type="button" class="bf-next" id="nextFree">Next free slot</button>
       </div>
+
+      <fieldset>
+        <legend>Service</legend>
+        <div class="chips" id="svcChips">
+          <label><input type="radio" name="service" value="Root canal" checked><span>Root canal</span></label>
+          <label><input type="radio" name="service" value="Check-up & cleaning"><span>Check-up & cleaning</span></label>
+          <label><input type="radio" name="service" value="Teeth whitening"><span>Teeth whitening</span></label>
+          <label><input type="radio" name="service" value="Dental implants"><span>Dental implants</span></label>
+          <label><input type="radio" name="service" value="Braces & aligners"><span>Braces & aligners</span></label>
+          <label><input type="radio" name="service" value="Crowns & veneers"><span>Crowns & veneers</span></label>
+          <label><input type="radio" name="service" value="Kids’ dentistry"><span>Kids’ dentistry</span></label>
+        </div>
+      </fieldset>
 
       <fieldset>
         <legend>Type of visit</legend>

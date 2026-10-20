@@ -4,7 +4,7 @@
 'use strict';
 
 /* ---------------- config ---------------- */
-const FILM = { dir: 'assets/seq/film', count: 0 /* set from canvas data-count */ };
+const FILM = { dir: 'assets/seq/film', count: 0 /* set from canvas data-count */, intro: 123 /* opening frames: patient opens mouth, camera dives to the tooth */ };
 const STAGE_CANAL = ['#C22A3E', '#C22A3E', '#4FAFC2', '#E9705C', '#E9705C'];
 const TOUR_STOPS = [
   { t: '09:00', title: 'Arrive', img: 'reception', text: 'Check in at reception. We go through your medical history and any medicines you take.',
@@ -71,7 +71,7 @@ class Film {
     if (this.imgs[i]) return this.imgs[i].p;
     const im = new Image(); im.decoding = 'async';
     const p = new Promise(res => {
-      im.onload = () => { (im.decode ? im.decode() : Promise.resolve()).catch(() => {}).then(() => { this.ok[i] = 1; if (i === 0) this.sampleBg(im); this.lastKey = ''; res(); }); };
+      im.onload = () => { (im.decode ? im.decode() : Promise.resolve()).catch(() => {}).then(() => { this.ok[i] = 1; if (i === FILM.intro) this.sampleBg(im); this.lastKey = ''; res(); }); };
       im.onerror = () => res();
     });
     im.src = this.src(i); this.imgs[i] = { im, p }; return p;
@@ -119,14 +119,15 @@ class Film {
     for (let d = 1; d < this.n; d++) { if (this.ok[i - d]) return i - d; if (this.ok[i + d]) return i + d; }
     return -1;
   }
-  rect(im) {
+  rect(im, f = FILM.intro) {
     const { W, H } = this; const iw = im.naturalWidth, ih = im.naturalHeight;
+    const k = smooth(FILM.intro - 30, FILM.intro, f); // opening shot is full-bleed, then eases to the treatment framing
     if (this.mob) { // square frame fitted to width, centred at 40% of the height
       const s = W / iw, dw = W, dh = ih * s; return [0, H * 0.40 - dh / 2, dw, dh];
     }
-    const z = W / H < 1.25 ? 1 : DESK_ZOOM; // smaller tooth on wide screens, leave room for copy
+    const z = lerp(1, W / H < 1.25 ? 1 : DESK_ZOOM, k); // smaller tooth on wide screens, leave room for copy
     const s = Math.max(W / iw, H / ih) * z; const dw = iw * s, dh = ih * s;
-    return [(W - dw) / 2 + (z < 1 ? W * DESK_SHIFT : 0), (H - dh) / 2 + H * 0.015, dw, dh];
+    return [(W - dw) / 2 + (z < 1 ? W * DESK_SHIFT * k : 0), (H - dh) / 2 + H * 0.015 * k, dw, dh];
   }
   buildMask(r) { // alpha mask that feathers any frame edge that sits inside the canvas
     const m = document.createElement('canvas'); m.width = this.W; m.height = this.H;
@@ -144,15 +145,16 @@ class Film {
     const a = Math.floor(f), t = f - a;
     const ia = this.nearest(a), ib = this.nearest(a + 1);
     if (ia < 0) return;
-    const key = this.blend && ib !== ia ? `${ia}|${ib}|${t.toFixed(2)}` : `${ia}`;
+    const bl = this.blend && f >= FILM.intro - 1; // no cross-fade during the fast opening zoom: snap to crisp frames
+    const key = bl && ib !== ia ? `${ia}|${ib}|${t.toFixed(2)}` : `${ia}`;
     if (key === this.lastKey) return; this.lastKey = key;
     const c = this.ctx, { W, H } = this;
-    const A = this.imgs[ia].im, r = this.rect(A);
+    const A = this.imgs[ia].im, r = this.rect(A, f);
     const mk = `${W}x${H}|${r.map(Math.round).join(',')}`;
     if (this.maskKey !== mk) this.buildMask(r);
     c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1; c.clearRect(0, 0, W, H);
     c.drawImage(A, r[0], r[1], r[2], r[3]);
-    if (this.blend && ib !== ia && ib >= 0 && t > 0.03) { c.globalAlpha = t; c.drawImage(this.imgs[ib].im, r[0], r[1], r[2], r[3]); c.globalAlpha = 1; }
+    if (bl && ib !== ia && ib >= 0 && t > 0.03) { c.globalAlpha = t; c.drawImage(this.imgs[ib].im, r[0], r[1], r[2], r[3]); c.globalAlpha = 1; }
     c.globalCompositeOperation = 'destination-in'; c.drawImage(this.mask, 0, 0);
     const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, this.bg[0]); g.addColorStop(1, this.bg[1]);
     c.globalCompositeOperation = 'destination-over'; c.fillStyle = g; c.fillRect(0, 0, W, H);
@@ -170,15 +172,17 @@ let lastStep = -1, lastPain = -1, lastTime = -1;
 
 /* scroll progress p (0..1 through the pinned film) → frame f (0..1) with holds at both ends */
 const DESK_ZOOM = 0.84, DESK_SHIFT = 0.06;
-const P_HOLD_A = 0.11, P_HOLD_B = 0.92;
+const P_HOLD_A = 0.03, P_HOLD_B = 0.92;
 function filmProgress() {
   const r = filmSec.getBoundingClientRect();
   return clamp(-r.top / (filmSec.offsetHeight - innerHeight));
 }
-function updateFilmUI(p, f) {
+function updateFilmUI(p, f, intro) { // f: 0..1 through the treatment; intro: still in the opening shot
   ui.intro.classList.toggle('gone', p > 0.035);
+  ui.meter.classList.toggle('off', intro);
+  hdr.classList.toggle('on-photo', intro);
   let step = -1;
-  if (p > 0.035) step = f <= 0.001 ? 0 : Math.min(4, 1 + Math.floor(f * 4 - 1e-6));
+  if (p > 0.035 && !intro) step = f <= 0.001 ? 0 : Math.min(4, 1 + Math.floor(f * 4 - 1e-6));
   if (p > P_HOLD_B + 0.015) step = 5;
   if (step !== lastStep) {
     ui.steps.forEach((el, i) => { el.classList.toggle('on', i === step); el.classList.toggle('past', i < step); });
@@ -217,7 +221,8 @@ function tick(ts) {
     const d = film.tgt - film.cur;
     film.cur = Math.abs(d) < 0.01 ? film.tgt : film.cur + d * (reduce ? 1 : 0.2);
     film.draw(film.cur);
-    updateFilmUI(p, film.cur / (film.n - 1));
+    const ti = film.cur - (FILM.intro - 1);
+    updateFilmUI(p, clamp(ti / (film.n - FILM.intro)), ti < 0);
     if (Math.abs(d) > 0.05) guard(ts); else lastTs = 0;
   }
   requestAnimationFrame(tick);
@@ -361,7 +366,7 @@ function closeBook() {
   lastFocus && lastFocus.focus && lastFocus.focus({ preventScroll: true });
 }
 document.addEventListener('click', e => {
-  const b = e.target.closest('[data-book]'); if (b) { e.preventDefault(); openBook(e); return; }
+  const b = e.target.closest('[data-book]'); if (b) { e.preventDefault(); const sv = b.dataset.service && form.querySelector(`[name=service][value="${b.dataset.service}"]`); if (sv) sv.checked = true; openBook(e); return; }
   if (e.target.closest('[data-close]')) closeBook();
 });
 document.addEventListener('keydown', e => {
@@ -383,7 +388,7 @@ form.addEventListener('input', e => { if (e.target.name) setErr(e.target.name, f
 form.addEventListener('submit', e => {
   e.preventDefault();
   const fd = new FormData(form);
-  const v = { day: fd.get('day'), time: fd.get('time'), name: (fd.get('name') || '').trim(), phone: (fd.get('phone') || '').replace(/\D/g, ''), email: (fd.get('email') || '').trim(), notes: (fd.get('notes') || '').trim(), sym: fd.getAll('sym'), visit: fd.get('visit'), who: fd.get('who'), contact: fd.get('contact') };
+  const v = { day: fd.get('day'), time: fd.get('time'), name: (fd.get('name') || '').trim(), phone: (fd.get('phone') || '').replace(/\D/g, ''), email: (fd.get('email') || '').trim(), notes: (fd.get('notes') || '').trim(), sym: fd.getAll('sym'), visit: fd.get('visit'), service: fd.get('service'), who: fd.get('who'), contact: fd.get('contact') };
   if (v.phone.length === 12 && v.phone.startsWith('91')) v.phone = v.phone.slice(2);
   const bad = {
     day: !v.day, time: !v.time || (v.day && slotTaken(v.day, v.time)), name: v.name.length < 2,
@@ -399,7 +404,7 @@ form.addEventListener('submit', e => {
   const dayLabel = form.querySelector(`[name=day][value="${v.day}"]`).dataset.label;
   booking = { ...v, dayLabel, ref: 'RX-' + Math.random().toString(36).slice(2, 6).toUpperCase() };
   // Demo: no server. For WordPress, POST `booking` to CF7 / WPForms / a REST endpoint here.
-  $('#bfSummary').textContent = `${v.name.split(' ')[0]}, we’ve held ${dayLabel} at ${v.time} for you. Dr. Shah is available for your ${v.visit.toLowerCase()} visit. We’ll ${v.contact === 'WhatsApp' ? 'WhatsApp' : 'call'} ${v.phone.replace(/(\d{5})(\d{5})/, '$1 $2')} to confirm within 2 working hours.`;
+  $('#bfSummary').textContent = `${v.name.split(' ')[0]}, we’ve held ${dayLabel} at ${v.time} for you. Dr. Shah is available for your ${v.service.toLowerCase()} ${v.visit.toLowerCase()} visit. We’ll ${v.contact === 'WhatsApp' ? 'WhatsApp' : 'call'} ${v.phone.replace(/(\d{5})(\d{5})/, '$1 $2')} to confirm within 2 working hours.`;
   $('#bfRef').textContent = booking.ref;
   form.hidden = true; done.hidden = false; card.scrollTop = 0;
   setTimeout(() => $('#bfIcs').focus({ preventScroll: true }), 200);

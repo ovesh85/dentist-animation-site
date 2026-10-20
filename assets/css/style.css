@@ -57,7 +57,7 @@ body.locked{overflow:hidden}
 .nav a:hover{color:var(--ink)}.nav a:hover::after{transform:scaleX(1)}
 
 /* ---------- FILM ---------- */
-.film{position:relative;height:800vh;background:var(--stage)}
+.film{position:relative;height:860vh;background:var(--stage)}
 .film-pin{position:sticky;top:0;height:100vh;height:100svh;overflow:clip}
 #filmCanvas{position:absolute;inset:0;width:100%;height:100%}
 .film-intro{position:absolute;left:var(--pad);bottom:clamp(32px,8vh,110px);top:calc(88px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;justify-content:flex-end;max-width:min(560px,40vw);transition:opacity .5s,transform .7s var(--ease)}
@@ -294,7 +294,7 @@ body.locked{overflow:hidden}
   body{font-size:16px}
   .hdr .btn{display:none}
   .mbook{display:flex}
-  .film{height:760vh}
+  .film{height:820vh}
   .film-intro{left:20px;right:20px;bottom:calc(22px + env(safe-area-inset-bottom,0px));top:auto;max-width:none}
   .film-intro h1{font-size:clamp(42px,12vw,64px)}
   .intro-l{font-size:16px;margin-top:14px}

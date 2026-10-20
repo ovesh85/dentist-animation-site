@@ -4,7 +4,7 @@
 'use strict';
 
 /* ---------------- config ---------------- */
-const FILM = { dir: 'assets/seq/film', count: 0 /* set from canvas data-count */, intro: 123 /* opening frames: patient opens mouth, camera dives to the tooth */ };
+const FILM = { dir: 'assets/seq/film', count: 0 /* set from canvas data-count */, intro: 157 /* opening frames: patient opens mouth, camera dives to the tooth */ };
 const STAGE_CANAL = ['#C22A3E', '#C22A3E', '#4FAFC2', '#E9705C', '#E9705C'];
 const TOUR_STOPS = [
   { t: '09:00', title: 'Arrive', img: 'reception', text: 'Check in at reception. We go through your medical history and any medicines you take.',

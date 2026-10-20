@@ -9,8 +9,8 @@ STRUCTURE
   index.html                 all sections and the booking form
   assets/css/style.css       design tokens at the top (:root)
   assets/js/app.js           config at the top: TOUR_STOPS, TIME_SLOTS, STAGE_CANAL
-  assets/seq/film/d/         432 WebP frames (123 intro + 309 treatment), 1920w (desktop surgery film)
-  assets/seq/film/m/         432 WebP frames (123 intro + 309 treatment), 900x900 square crop (phones)
+  assets/seq/film/d/         466 WebP frames (157 intro + 309 treatment), 1920w (desktop surgery film)
+  assets/seq/film/m/         466 WebP frames (157 intro + 309 treatment), 900x900 square crop (phones)
   assets/img/                tour rooms (1920 + 960 "-m"), doctor, before/after, og-image
   assets/vendor/lenis.min.js smooth scroll (local copy)
 
@@ -22,7 +22,7 @@ SECTIONS
   Booking form: symptoms, next 6 working days, time slots, validation, reference number, .ics export
 
 TUNING
-  Film scroll length: .film{height:800vh} in style.css (760vh on phones)
+  Film scroll length: .film{height:860vh} in style.css (820vh on phones)
   Film holds: P_HOLD_A / P_HOLD_B in app.js. Desktop size: DESK_ZOOM, DESK_SHIFT.
   Slow devices automatically drop the frame cross-fade, then resolution. Data-saver loads half the frames.
 

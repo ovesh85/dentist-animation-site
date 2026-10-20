@@ -13,7 +13,7 @@ const TOUR_STOPS = [
   { t: '09:10', title: '3D scan', img: 'scan', text: 'A low-dose CBCT scan maps every canal, including the small hidden ones a flat X-ray misses.',
     hs: [ { x: .52, y: .42, h: 'CBCT scanner', p: 'You stand still for about 15 seconds. The arm circles your head once.' },
           { x: .86, y: .72, h: 'Your scan', p: 'Ready in two minutes, in full 3D.' } ] },
-  { t: '09:25', title: 'Consultation', img: 'consult', text: 'Dr. Shah shows you the scan, explains the plan and gives a written estimate before anything starts.',
+  { t: '09:25', title: 'Consultation', img: 'consult', text: 'Dr. Carter shows you the scan, explains the plan and gives a written estimate before anything starts.',
     hs: [ { x: .48, y: .36, h: 'Your tooth in 3D', p: 'You’ll see the infection and the canals we will treat.' },
           { x: .33, y: .74, h: 'Ask anything', p: 'Nothing starts until you’re comfortable and have agreed the price.' } ] },
   { t: '09:40', title: 'Treatment', img: 'suite', text: 'The procedure you just watched, done under an operating microscope. Headphones and a ceiling screen help the time pass.',
@@ -334,12 +334,12 @@ function buildTimes() {
 function docStatus() {
   const box = $('#docStatus'), day = (form.querySelector('[name=day]:checked') || {}).value, time = (form.querySelector('[name=time]:checked') || {}).value;
   let st = 'idle', msg = 'Pick a day and time to check availability.';
-  if (day && time) { st = 'yes'; msg = `Dr. Shah is available on ${fmtDay(day)} at ${time}.`; }
-  else if (day) { const n = freeCount(day); st = n ? 'yes' : 'no'; msg = n ? `Dr. Shah has ${n} free slot${n > 1 ? 's' : ''} on ${fmtDay(day)}. Choose a time.` : `Dr. Shah is not available on ${fmtDay(day)}.`; }
+  if (day && time) { st = 'yes'; msg = `Dr. Carter is available on ${fmtDay(day)} at ${time}.`; }
+  else if (day) { const n = freeCount(day); st = n ? 'yes' : 'no'; msg = n ? `Dr. Carter has ${n} free slot${n > 1 ? 's' : ''} on ${fmtDay(day)}. Choose a time.` : `Dr. Carter is not available on ${fmtDay(day)}.`; }
   box.dataset.state = st; $('#docMsg').textContent = msg;
 }
 function nextFree() {
-  const radios = [...form.querySelectorAll('[name=day]:not(:disabled)')]; if (!radios.length) { const box = $('#docStatus'); box.dataset.state = 'no'; $('#docMsg').textContent = 'Dr. Shah has no free slots in the next 8 days. Please call us.'; return; }
+  const radios = [...form.querySelectorAll('[name=day]:not(:disabled)')]; if (!radios.length) { const box = $('#docStatus'); box.dataset.state = 'no'; $('#docMsg').textContent = 'Dr. Carter has no free slots in the next 8 days. Please call us.'; return; }
   const r = radios[0]; r.checked = true; buildTimes();
   const t = TIME_SLOTS.find(t => !slotTaken(r.value, t)); const tr = form.querySelector(`[name=time][value="${t}"]`); if (tr) tr.checked = true;
   setErr('day', false); setErr('time', false); docStatus();
@@ -404,7 +404,7 @@ form.addEventListener('submit', e => {
   const dayLabel = form.querySelector(`[name=day][value="${v.day}"]`).dataset.label;
   booking = { ...v, dayLabel, ref: 'RX-' + Math.random().toString(36).slice(2, 6).toUpperCase() };
   // Demo: no server. For WordPress, POST `booking` to CF7 / WPForms / a REST endpoint here.
-  $('#bfSummary').textContent = `${v.name.split(' ')[0]}, we’ve held ${dayLabel} at ${v.time} for you. Dr. Shah is available for your ${v.service.toLowerCase()} ${v.visit.toLowerCase()} visit. We’ll ${v.contact === 'WhatsApp' ? 'WhatsApp' : 'call'} ${v.phone.replace(/(\d{5})(\d{5})/, '$1 $2')} to confirm within 2 working hours.`;
+  $('#bfSummary').textContent = `${v.name.split(' ')[0]}, we’ve held ${dayLabel} at ${v.time} for you. Dr. Carter is available for your ${v.service.toLowerCase()} ${v.visit.toLowerCase()} visit. We’ll ${v.contact === 'WhatsApp' ? 'WhatsApp' : 'call'} ${v.phone.replace(/(\d{5})(\d{5})/, '$1 $2')} to confirm within 2 working hours.`;
   $('#bfRef').textContent = booking.ref;
   form.hidden = true; done.hidden = false; card.scrollTop = 0;
   setTimeout(() => $('#bfIcs').focus({ preventScroll: true }), 200);
